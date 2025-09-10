@@ -8,18 +8,25 @@ from db import init_db
 from handlers import router
 
 async def main():
-    print("Инициализация...")
+    print("LOG: Инициализация...")
     init_db()
-    print("Инициализация БД завершена")
+    
     bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-    print("Bot создан")
+    print("LOG: Bot создан")
+    
     dp = Dispatcher()
     dp.include_router(router)
-    print("Перед стартом polling")
+    print("LOG: Роутер подключен")
+    
+    print("LOG: Запуск polling...")
+    await bot.delete_webhook(drop_pending_updates=True) # Пропускаем старые апдейты
     await dp.start_polling(bot)
-    print("Polling завершился")
+    print("LOG: Polling завершился")
 
 if __name__ == '__main__':
-    print("Старт main()")
-    asyncio.run(main())
-    print("Выход из программы")
+    print("LOG: Старт main()")
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("LOG: Бот остановлен вручную")
+    print("LOG: Выход из программы")
