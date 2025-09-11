@@ -44,8 +44,9 @@ def parse_idx(cb_data: str) -> int | None:
 async def cmd_start(message: types.Message, state: FSMContext):
     db.create_user(message.from_user.id, message.from_user.username)
     await state.clear()
-    await message.answer(
-        "Привет! Это бот «Неделя знаний Северсталь». Нажмите «Начать день», чтобы перейти к активностям.",
+    await message.answer_photo(
+        photo=types.FSInputFile("img/Старт.png"), 
+        caption="Привет! Это бот «Неделя знаний Северсталь». Нажмите «Начать день», чтобы перейти к активностям.",
         reply_markup=keyboards.main_menu_kb()
     )
 
@@ -60,8 +61,10 @@ async def btn_profile(message: types.Message):
         await message.answer("Профиль не найден. Нажмите /start, чтобы начать.", reply_markup=keyboards.main_menu_kb())
         return
     rewards = ', '.join(profile['rewards']) or "Нет наград"
-    await message.answer(
-        f"<b>Профиль:</b>\nID: <code>{profile['id']}</code>\nЛогин: {profile['username'] or '—'}\nБаллы: {profile['points']}\nНаграды: {rewards}"
+    await message.answer_photo(
+        photo=types.FSInputFile("img/13.png"),  # Замените на путь к вашей картинке (например, 'profile.jpg' в корне проекта)
+        caption=f"<b>Профиль:</b>\nID: <code>{profile['id']}</code>\nЛогин: {profile['username'] or '—'}\nБаллы: {profile['points']}\nНаграды: {rewards}",
+        
     )
 
 # ===== Обработка дней =====
@@ -89,7 +92,12 @@ async def nav_main(callback: types.CallbackQuery, state: FSMContext):
 
 async def start_day1(message: types.Message, state: FSMContext):
     await state.set_state(TestStates.CHOOSE_TEST)
-    await message.answer("День 1: выберите режим:", reply_markup=keyboards.day1_mode_kb())
+    await message.answer_photo(
+        photo=types.FSInputFile("img/День 1.png"),  # Замените на свой путь к картинке
+        caption="День 1: выберите режим:",
+        reply_markup=keyboards.day1_mode_kb()
+    )
+
 
 @router.callback_query(F.data == "day1:choose_again", TestStates.CHOOSE_TEST)
 async def day1_choose_again(callback: types.CallbackQuery, state: FSMContext):
@@ -303,8 +311,17 @@ async def handle_inline_share(inline_query: InlineQuery):
 # ===== ДЕНЬ 2: КАРТОЧКИ =====
 
 async def start_day2(message: types.Message, state: FSMContext):
-    uid = message.from_user.id
-    progress = db.get_day2_progress(uid)
+    await state.set_state(Day2States.CHOOSE_CARD)
+    progress = db.get_day2_progress(message.from_user.id)
+    await message.answer_photo(
+        photo=types.FSInputFile("img/День 2.png"),  
+        caption="Сегодня день лёгких, но полезных открытий!\n\n"
+                "Слова умеют объединять людей и делать команду сильнее. "
+                "Выбери одну из пяти карточек и узнай свой комплимент + задание дня.\n\n"
+                "Готов? Жми на кнопку!",
+        reply_markup=keyboards.day2_cards_kb(progress["opened_cards"])
+    )
+
 
     if progress["completed"]:
         await message.answer(
