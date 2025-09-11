@@ -49,6 +49,7 @@ def fun_result_kb(share_text: str) -> types.InlineKeyboardMarkup:
     return types.InlineKeyboardMarkup(inline_keyboard=[
         [types.InlineKeyboardButton(text="🔗 Поделиться", switch_inline_query=share_text)],
         [types.InlineKeyboardButton(text="🔄 Пройти другой тест", callback_data="day1:choose_again")],
+        [types.InlineKeyboardButton(text="🎧 Послушать подкаст (5 мин)", url=PODCAST_URL)],
     ])
 
 # --- День 2 ---
@@ -58,6 +59,7 @@ def day2_cards_kb(opened_cards: list[int]) -> types.InlineKeyboardMarkup:
         text = f"✅ Карточка {i+1} (открыто)" if i in opened_cards else f"🎴 Карточка {i+1}"
         cb_data = "day2:opened" if i in opened_cards else f"day2:card:{i}"
         buttons.append([types.InlineKeyboardButton(text=text, callback_data=cb_data)])
+        [types.InlineKeyboardButton(text="🎧 Послушать подкаст (5 мин)", url=PODCAST_URL)],
     buttons.append([types.InlineKeyboardButton(text="В главное меню", callback_data="nav:main")])
     return types.InlineKeyboardMarkup(inline_keyboard=buttons)
 
@@ -86,6 +88,7 @@ def day3_after_comics_kb() -> types.InlineKeyboardMarkup:
     return types.InlineKeyboardMarkup(inline_keyboard=[
         [types.InlineKeyboardButton(text="Пройти викторину", callback_data="day3:start_quiz")],
         [types.InlineKeyboardButton(text="Выбрать другого героя", callback_data="day3:choose_another_hero")],
+        [types.InlineKeyboardButton(text="🎧 Послушать подкаст (5 мин)", url=PODCAST_URL)],
         [types.InlineKeyboardButton(text="В главное меню", callback_data="nav:main")]
     ])
 
@@ -106,5 +109,6 @@ def day5_quiz_kb(options: list) -> types.InlineKeyboardMarkup:
     
 def day5_after_quiz_kb() -> types.InlineKeyboardMarkup:
     return types.InlineKeyboardMarkup(inline_keyboard=[
-        [types.InlineKeyboardButton(text="Пройти рефлексию", callback_data="day5:start_reflection")]
+        [types.InlineKeyboardButton(text="Пройти рефлексию", callback_data="day5:start_reflection")],
+        [types.InlineKeyboardButton(text="🎧 Послушать подкаст (5 мин)", url=PODCAST_URL)]
     ])
