@@ -311,17 +311,7 @@ async def handle_inline_share(inline_query: InlineQuery):
 # ===== ДЕНЬ 2: КАРТОЧКИ =====
 
 async def start_day2(message: types.Message, state: FSMContext):
-    await state.set_state(Day2States.CHOOSE_CARD)
     progress = db.get_day2_progress(message.from_user.id)
-    await message.answer_photo(
-        photo=types.FSInputFile("img/День 2.png"),  
-        caption="Сегодня день лёгких, но полезных открытий!\n\n"
-                "Слова умеют объединять людей и делать команду сильнее. "
-                "Выбери одну из пяти карточек и узнай свой комплимент + задание дня.\n\n"
-                "Готов? Жми на кнопку!",
-        reply_markup=keyboards.day2_cards_kb(progress["opened_cards"])
-    )
-
 
     if progress["completed"]:
         await message.answer(
@@ -331,12 +321,21 @@ async def start_day2(message: types.Message, state: FSMContext):
         return
 
     await state.set_state(Day2States.CHOOSE_CARD)
-    
-    text = texts.DAY2_INTRO
-    if progress["opened_cards"]:
-        text = f"Продолжим! У тебя осталось {5 - len(progress['opened_cards'])} карточек на сегодня."
 
-    await message.answer(text, reply_markup=keyboards.day2_cards_kb(progress['opened_cards']))
+    caption_text = "Сегодня день лёгких, но полезных открытий!\n\n" \
+                "Слова умеют объединять людей и делать команду сильнее. " \
+                "Выбери одну из пяти карточек и узнай свой комплимент + задание дня.\n\n" \
+                "Готов? Жми на кнопку!"
+
+    if progress["opened_cards"]:
+        caption_text = f"Продолжим! У тебя осталось {5 - len(progress['opened_cards'])} карточек на сегодня.\n\n" + caption_text
+
+    await message.answer_photo(
+        photo=types.FSInputFile("img/День 2.png"),  # корректный путь к вашей картинке!
+        caption=caption_text,
+        reply_markup=keyboards.day2_cards_kb(progress["opened_cards"])
+    )
+
 
 @router.callback_query(Day2States.CHOOSE_CARD, F.data.startswith("day2:card:"))
 async def handle_day2_card(callback: types.CallbackQuery, state: FSMContext):
@@ -364,6 +363,7 @@ async def handle_day2_card(callback: types.CallbackQuery, state: FSMContext):
     await safe_delete_message(callback.message)
     await start_day2(callback.message, state)
     await callback.answer()
+
 
 @router.callback_query(Day2States.CHOOSE_CARD, F.data == "day2:opened")
 async def handle_day2_opened_card(callback: types.CallbackQuery):
