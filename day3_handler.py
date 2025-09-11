@@ -89,8 +89,8 @@ async def show_comics_result(message: types.Message, state: FSMContext):
     await message.answer("История завершена!", reply_markup=keyboards.day3_after_comics_kb())
     
     uid = message.chat.id
-    if not db.has_completed_day(uid, 3):
-        db.update_points(uid, 5) # Баллы за прохождение комикса
+    if not await db.has_completed_day(uid, 3):
+        await db.update_points(uid, 5) # Баллы за прохождение комикса
         # День будет считаться пройденным после викторины
         await message.answer("🎉 Вам начислено <b>+5 баллов</b> за прохождение истории!")
 

@@ -49,8 +49,8 @@ async def handle_day2_card(callback: types.CallbackQuery, state: FSMContext):
     card_idx = parse_idx(callback.data)
     uid = callback.from_user.id
     
-    db.update_points(uid, 3)
-    db.mark_card_opened(uid, 2, card_idx)
+    await db.update_points(uid, 3)
+    await db.mark_card_opened(uid, 2, card_idx)
     
     card = texts.DAY2_CARDS[card_idx]
     card_text = (

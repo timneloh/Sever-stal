@@ -72,10 +72,10 @@ async def start_reflection(callback: types.CallbackQuery, state: FSMContext):
 
 @router.message(Day5States.REFLECTION)
 async def handle_reflection(message: types.Message, state: FSMContext):
-    db.save_reflection(message.from_user.id, message.text)
-    db.update_points(message.from_user.id, 15)
-    db.mark_day_completed(message.from_user.id, 5)
-    db.add_result(message.from_user.id, texts.DAY5_FINAL_MOTIVATION)
+    await db.save_reflection(message.from_user.id, message.text)
+    await db.update_points(message.from_user.id, 15)
+    await db.mark_day_completed(message.from_user.id, 5)
+    await db.add_result(message.from_user.id, texts.DAY5_FINAL_MOTIVATION)
     
     await message.answer(
         "Спасибо за твой отзыв! Марафон завершен. Тебе начислено <b>+15 баллов.</b>\n\n"

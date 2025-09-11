@@ -4,6 +4,7 @@ from aiogram import Router, types, F
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import InlineQuery, InlineQueryResultArticle, InputTextMessageContent
+import json
 
 from config import EVENT_DAYS
 import db
@@ -28,7 +29,7 @@ router = Router()
 
 @router.message(Command("start"))
 async def cmd_start(message: types.Message, state: FSMContext):
-    db.create_user(message.from_user.id, message.from_user.username)
+    await db.create_user(message.from_user.id, message.from_user.username)
     await state.clear()
     await message.answer_photo(
         photo=types.FSInputFile("img/Старт.png"), 
@@ -42,19 +43,34 @@ async def btn_help(message: types.Message):
 
 @router.message(F.text == "Профиль")
 async def btn_profile(message: types.Message):
-    profile = db.get_profile(message.from_user.id)
+    profile = await db.get_profile(message.from_user.id)
     if not profile:
         await message.answer("Профиль не найден. Нажмите /start, чтобы начать.", reply_markup=keyboards.main_menu_kb())
         return
 
+    # Преобразуем rewards из JSON-строки в список
+    rewards_val = profile.get('rewards')
+    rewards_list = []
+    if isinstance(rewards_val, str) and rewards_val:
+        rewards_list = json.loads(rewards_val)
+    elif isinstance(rewards_val, list):
+        rewards_list = rewards_val
+
+    # Преобразуем results из JSON-строки в список
+    results_val = profile.get('results')
+    results_list = []
+    if isinstance(results_val, str) and results_val:
+        results_list = json.loads(results_val)
+    elif isinstance(results_val, list):
+        results_list = results_val
+
     # Логика наград
-    rewards = profile.get('rewards', [])
-    if db.has_completed_all_days(message.from_user.id):
-        if "Мастер коммуникаций" not in rewards:
-            rewards.append("Мастер коммуникаций")
+    if await db.has_completed_all_days(message.from_user.id):
+        if "Мастер коммуникаций" not in rewards_list:
+            rewards_list.append("Мастер коммуникаций")
     
-    rewards_text = ', '.join(rewards) if rewards else "0"
-    results_text = ', '.join(profile.get('results', [])) if profile.get('results') else "0"
+    rewards_text = ', '.join(rewards_list) if rewards_list else "0"
+    results_text = ', '.join(results_list) if results_list else "0"
 
     caption = (
         f"<b>Профиль:</b>\n"
@@ -71,7 +87,7 @@ async def btn_profile(message: types.Message):
     )
     
     # Выдача Digital Badge и сертификата
-    if "Мастер коммуникаций" in rewards:
+    if "Мастер коммуникаций" in rewards_list:
         await message.answer_document(
             document=types.FSInputFile("files/Digital_Badge.png"),
             caption="Поздравляем! Вы получаете Digital Badge."
@@ -81,12 +97,13 @@ async def btn_profile(message: types.Message):
             caption="А также именной сертификат!"
         )
 
+
 # ===== Обработка дней =====
 
 @router.message(F.text == "Начать день")
 async def btn_start_day(message: types.Message, state: FSMContext):
-    db.create_user(message.from_user.id, message.from_user.username)
-    current_day = db.get_current_day()
+    await db.create_user(message.from_user.id, message.from_user.username)
+    current_day = await db.get_current_day()
 
     day_starters = {
         1: start_day1,
@@ -147,8 +164,8 @@ async def cmd_set_day(message: types.Message):
         
     day = int(args[1])
     if 1 <= day <= EVENT_DAYS:
-        db.set_current_day(day)
-        await message.answer(f"✅ День установлен: {day}")
+        await db.set_current_day(day)
+        await message.answer("✅ День установлен: {day}")
     else:
         await message.answer(f"⚠️ День должен быть в диапазоне 1-{EVENT_DAYS}.")
 
@@ -157,4 +174,3 @@ async def cmd_set_day(message: types.Message):
 @router.message()
 async def unknown_message(message: types.Message):
     await message.answer("Команда не распознана. Используйте меню или /help.")
-

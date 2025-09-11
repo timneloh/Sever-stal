@@ -5,6 +5,10 @@ from aiogram.enums.parse_mode import ParseMode
 from aiogram.client.default import DefaultBotProperties
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from datetime import datetime
+from dotenv import load_dotenv
+import os
+
+load_dotenv() # Загружаем переменные из .env файла
 
 from config import TOKEN, EVENT_DAYS
 from db import init_db, get_current_day, set_current_day
@@ -17,14 +21,14 @@ from day5_handler import router as day5_router
 
 # Функция для автоматической смены дня
 async def advance_day():
-    current_day = get_current_day()
+    current_day = await get_current_day()
     if current_day is None:
         current_day = 1
     else:
         current_day += 1
     
     if current_day <= EVENT_DAYS:
-        set_current_day(current_day)
+        await set_current_day(current_day)
         print(f"LOG: Автоматическая смена дня. Новый день: {current_day}")
     else:
         print("LOG: Марафон завершен. Смена дня остановлена.")
@@ -32,11 +36,11 @@ async def advance_day():
 async def main():
     logging.basicConfig(level=logging.INFO)
     print("LOG: Инициализация...")
-    init_db()
+    await init_db()
     
     # Установка начального дня, если он не задан
-    if get_current_day() is None:
-        set_current_day(1)
+    if await get_current_day() is None:
+        await set_current_day(1)
         print("LOG: Установлен начальный день: 1")
 
     bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))

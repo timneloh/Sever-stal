@@ -119,7 +119,7 @@ async def handle_day4_answer(callback: types.CallbackQuery, state: FSMContext):
 
     if answer_idx == case["correct"]:
         feedback_message = await callback.message.answer(f"✅ Да, это правильный вариант!\n\n<i>{case['comment']}</i>")
-        db.update_points(callback.from_user.id, 3)
+        await db.update_points(callback.from_user.id, 3)
     else:
         correct_answer_text = case['options'][case['correct']]
         feedback_message = await callback.message.answer(f"❌ Этот ответ не правильный, правильный ответ: «{correct_answer_text}»\n\n<i>{case['comment']}</i>")

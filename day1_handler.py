@@ -63,10 +63,10 @@ async def show_disc_result(message: types.Message, state: FSMContext):
     await message.answer(f"✨ <i>{motivational_card}</i> ✨")
 
     uid = message.chat.id
-    db.add_result(uid, result['title']) # Сохраняем результат
-    if not db.has_completed_day(uid, 1):
-        db.update_points(uid, 10)
-        db.mark_day_completed(uid, 1)
+    await db.add_result(uid, result['title']) # Сохраняем результат
+    if not await db.has_completed_day(uid, 1):
+        await db.update_points(uid, 10)
+        await db.mark_day_completed(uid, 1)
         await message.answer("🎉 Вам начислено <b>+10 баллов</b> за прохождение теста!")
     
     await state.set_state(TestStates.CHOOSE_TEST)
@@ -171,10 +171,10 @@ async def show_fun_result(message: types.Message, state: FSMContext):
     await message.answer(result_message, reply_markup=keyboards.fun_result_kb(share_text))
     
     uid = message.chat.id
-    db.add_result(uid, result['title']) # Сохраняем результат
-    if not db.has_completed_day(uid, 1):
-        db.update_points(uid, 10)
-        db.mark_day_completed(uid, 1)
+    await db.add_result(uid, result['title']) # Сохраняем результат
+    if not await db.has_completed_day(uid, 1):
+        await db.update_points(uid, 10)
+        await db.mark_day_completed(uid, 1)
         await message.answer("🎉 Вам начислено <b>+10 баллов</b> за прохождение теста!")
         
     await state.set_state(TestStates.CHOOSE_TEST)

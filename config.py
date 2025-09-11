@@ -1,4 +1,15 @@
-TOKEN = "8372038074:AAGWTC0ExZuTFVQvKkoqoPyxKnbCJ8IuOEU"  # <-- ВАЖНО: Замените на ваш токен
+import os
+
+# --- Секретные данные ---
+# Загружаются из .env файла при старте бота в bot.py
+TOKEN = os.getenv("TOKEN")
+DB_HOST = os.getenv("DB_HOST", "localhost")
+DB_PORT = int(os.getenv("DB_PORT", 5432))
+DB_USER = os.getenv("DB_USER")
+DB_PASS = os.getenv("DB_PASS")
+DB_NAME = os.getenv("DB_NAME")
+
+# --- Общие настройки ---
 
 # Количество дней мероприятия или теста
 EVENT_DAYS = 5
