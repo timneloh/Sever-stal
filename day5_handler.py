@@ -1,3 +1,4 @@
+import random
 from aiogram import Router, types, F
 from aiogram.fsm.context import FSMContext
 
@@ -21,6 +22,11 @@ async def start_day5(message: types.Message, state: FSMContext):
 
 async def ask_day5_question(message: types.Message, state: FSMContext):
     data = await state.get_data()
+    # Удаляем предыдущие сообщения (если есть)
+    for msg in data.get('sent_messages', []):
+        await safe_delete_message(msg)
+    await state.update_data(sent_messages=[])
+
     q_idx = data.get("q_idx", 0)
     
     if q_idx >= len(texts.DAY5_QUIZ_QUESTIONS):
@@ -28,22 +34,24 @@ async def ask_day5_question(message: types.Message, state: FSMContext):
         return
 
     question = texts.DAY5_QUIZ_QUESTIONS[q_idx]
-    await message.answer(
+    sent_message = await message.answer(
         f"<b>Вопрос {q_idx+1}/{len(texts.DAY5_QUIZ_QUESTIONS)}</b>\n{question['text']}",
         reply_markup=keyboards.day5_quiz_kb(question['options'])
     )
+    await state.update_data(sent_messages=[sent_message])
 
 async def show_day5_quiz_results(message: types.Message, state: FSMContext):
     data = await state.get_data()
     correct_answers = data.get("correct_answers", 0)
     
-    db.update_points(message.from_user.id, 20) # Баллы за квиз
+    await db.update_points(message.from_user.id, 20) # Баллы за квиз
     
     await message.answer(
         f"Квиз завершен!\nПравильных ответов: {correct_answers} из {len(texts.DAY5_QUIZ_QUESTIONS)}.\n"
         f"Вам начислено <b>+20 баллов!</b>",
         reply_markup=keyboards.day5_after_quiz_kb()
     )
+
 
 @router.callback_query(Day5States.QUIZ, F.data.startswith("day5:answer:"))
 async def handle_day5_answer(callback: types.CallbackQuery, state: FSMContext):
@@ -54,11 +62,15 @@ async def handle_day5_answer(callback: types.CallbackQuery, state: FSMContext):
     
     await safe_delete_message(callback.message)
     
+    feedback_message = None
     if answer_idx == question["correct"]:
         await state.update_data(correct_answers=data.get("correct_answers", 0) + 1)
-        await callback.message.answer(f"✅ Верно!\n<i>{question['comment']}</i>")
+        feedback_message = await callback.message.answer(f"✅ Верно!\n<i>{question['comment']}</i>")
     else:
-        await callback.message.answer(f"❌ Неверно. Правильный ответ: {question['options'][question['correct']]}\n<i>{question['comment']}</i>")
+        feedback_message = await callback.message.answer(f"❌ Неверно. Правильный ответ: {question['options'][question['correct']]}\n<i>{question['comment']}</i>")
+    
+    if feedback_message:
+        await state.update_data(sent_messages=[feedback_message])
         
     await state.update_data(q_idx=q_idx + 1)
     await ask_day5_question(callback.message, state)
@@ -75,7 +87,8 @@ async def handle_reflection(message: types.Message, state: FSMContext):
     await db.save_reflection(message.from_user.id, message.text)
     await db.update_points(message.from_user.id, 15)
     await db.mark_day_completed(message.from_user.id, 5)
-    await db.add_result(message.from_user.id, texts.DAY5_FINAL_MOTIVATION)
+    final_motivation = random.choice(texts.DAY5_FINAL_MOTIVATION_CARD_TEXTS)
+    await db.add_result(message.from_user.id, final_motivation)
     
     await message.answer(
         "Спасибо за твой отзыв! Марафон завершен. Тебе начислено <b>+15 баллов.</b>\n\n"
@@ -86,5 +99,6 @@ async def handle_reflection(message: types.Message, state: FSMContext):
     # Отправка финальной фотокарточки
     await message.answer_photo(
         photo=types.FSInputFile("img/Мастер коммуникации.png"),
-        caption=texts.DAY5_FINAL_MOTIVATION
+        caption=final_motivation
     )
+

@@ -85,8 +85,24 @@ async def ask_comics_question(message: types.Message, state: FSMContext):
     )
 
 async def show_comics_result(message: types.Message, state: FSMContext):
-    # Тут можно добавить логику разных концовок на основе очков
-    await message.answer("История завершена!", reply_markup=keyboards.day3_after_comics_kb())
+    data = await state.get_data()
+    hero = data.get("hero")
+    scores = data.get("scores")
+
+    # Определяем доминирующую черту
+    if scores['сила'] > scores['мягкость'] and scores['сила'] > scores['харизма']:
+        dominant_trait = 'сила'
+    elif scores['харизма'] > scores['сила'] and scores['харизма'] > scores['мягкость']:
+        dominant_trait = 'харизма'
+    elif scores['мягкость'] > scores['сила'] and scores['мягкость'] > scores['харизма']:
+        dominant_trait = 'мягкость'
+    else:
+        dominant_trait = 'default' # Ничья или хаотичный выбор
+
+    # Получаем текст концовки
+    ending_text = texts.DAY3_COMICS[hero][-1]['endings'][dominant_trait]
+
+    await message.answer(ending_text, reply_markup=keyboards.day3_after_comics_kb())
     
     uid = message.chat.id
     if not await db.has_completed_day(uid, 3):
@@ -139,16 +155,14 @@ async def ask_quiz_question(message: types.Message, state: FSMContext):
 async def show_quiz_result(message: types.Message, state: FSMContext):
     # Тут логика определения архетипа по баллам викторины
     archetype = "Лидер-стратег" # Заглушка
-    await message.answer(f"Викторина пройдена!\nВаш архетип: <b>{archetype}</b>")
-    # return types.InlineKeyboardMarkup(inline_keyboard=[
-    # [types.InlineKeyboardButton(text="🎧 Послушать подкаст (5 мин)", url=PODCAST_URL)],
-    # return types.InlineKeyboardMarkup(inline_keyboard=buttons)
-    # ]) - обязательно добавить кнопку послушать подкаст, иначе не пройдет проверку
+    await message.answer(f"Викторина пройдена!\nВаш архетип: <b>{archetype}</b>", reply_markup=types.InlineKeyboardMarkup(inline_keyboard=[
+        [types.InlineKeyboardButton(text="🎧 Послушать подкаст (5 мин)", url=PODCAST_URL)]
+    ]))
 
     uid = message.chat.id
-    if not db.has_completed_day(uid, 3):
-        db.mark_day_completed(uid, 3)
-        db.add_result(uid, archetype)
+    if not await db.has_completed_day(uid, 3):
+        await db.mark_day_completed(uid, 3)
+        await db.add_result(uid, archetype)
         await message.answer("День 3 пройден!")
         
 @router.callback_query(Day3States.QUIZ, F.data.startswith("day3:quiz_answer:"))

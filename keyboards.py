@@ -3,7 +3,8 @@ from config import PODCAST_URL
 
 def main_menu_kb() -> types.ReplyKeyboardMarkup:
     buttons = [
-        [types.KeyboardButton(text="Начать день")],
+        [types.KeyboardButton(text="Задания")],
+        [types.KeyboardButton(text="Генератор мемов")],
         [types.KeyboardButton(text="Профиль"), types.KeyboardButton(text="Помощь")],
     ]
     return types.ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True)

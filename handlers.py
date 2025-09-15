@@ -1,5 +1,7 @@
 import logging
 import uuid
+import os
+import random
 from aiogram import Router, types, F
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
@@ -61,9 +63,26 @@ async def cmd_start(message: types.Message, state: FSMContext):
     )
 
 
+
 @router.message(F.text.in_({"Помощь", "/help"}))
 async def btn_help(message: types.Message):
     await message.answer(USER_COMMANDS_TEXT, parse_mode=None)
+
+@router.message(F.text == "Генератор мемов")
+async def btn_meme_generator(message: types.Message):
+    meme_folder = "img/mem"
+    memes = [f for f in os.listdir(meme_folder) if os.path.isfile(os.path.join(meme_folder, f))]
+    if not memes:
+        await message.answer("Извините, мемы временно недоступны.")
+        return
+    
+    random_meme = random.choice(memes)
+    meme_path = os.path.join(meme_folder, random_meme)
+    
+    await message.answer_photo(
+        photo=types.FSInputFile(meme_path),
+        caption="Смех — лучший коммуникатор"
+    )
 
 @router.message(F.text == "Профиль")
 async def btn_profile(message: types.Message):
@@ -124,7 +143,7 @@ async def btn_profile(message: types.Message):
 
 # ===== Обработка дней =====
 
-@router.message(F.text == "Начать день")
+@router.message(F.text == "Задания")
 async def btn_start_day(message: types.Message, state: FSMContext):
     await db.create_user(message.from_user.id, message.from_user.username)
     current_day = await db.get_current_day()
