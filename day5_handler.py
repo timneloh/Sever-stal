@@ -22,6 +22,11 @@ async def start_day5(message: types.Message, state: FSMContext):
 
 async def ask_day5_question(message: types.Message, state: FSMContext):
     data = await state.get_data()
+    # Удаляем предыдущие сообщения (если есть)
+    for msg in data.get('sent_messages', []):
+        await safe_delete_message(msg)
+    await state.update_data(sent_messages=[])
+
     q_idx = data.get("q_idx", 0)
     
     if q_idx >= len(texts.DAY5_QUIZ_QUESTIONS):
@@ -29,10 +34,11 @@ async def ask_day5_question(message: types.Message, state: FSMContext):
         return
 
     question = texts.DAY5_QUIZ_QUESTIONS[q_idx]
-    await message.answer(
+    sent_message = await message.answer(
         f"<b>Вопрос {q_idx+1}/{len(texts.DAY5_QUIZ_QUESTIONS)}</b>\n{question['text']}",
         reply_markup=keyboards.day5_quiz_kb(question['options'])
     )
+    await state.update_data(sent_messages=[sent_message])
 
 async def show_day5_quiz_results(message: types.Message, state: FSMContext):
     data = await state.get_data()
@@ -56,11 +62,15 @@ async def handle_day5_answer(callback: types.CallbackQuery, state: FSMContext):
     
     await safe_delete_message(callback.message)
     
+    feedback_message = None
     if answer_idx == question["correct"]:
         await state.update_data(correct_answers=data.get("correct_answers", 0) + 1)
-        await callback.message.answer(f"✅ Верно!\n<i>{question['comment']}</i>")
+        feedback_message = await callback.message.answer(f"✅ Верно!\n<i>{question['comment']}</i>")
     else:
-        await callback.message.answer(f"❌ Неверно. Правильный ответ: {question['options'][question['correct']]}\n<i>{question['comment']}</i>")
+        feedback_message = await callback.message.answer(f"❌ Неверно. Правильный ответ: {question['options'][question['correct']]}\n<i>{question['comment']}</i>")
+    
+    if feedback_message:
+        await state.update_data(sent_messages=[feedback_message])
         
     await state.update_data(q_idx=q_idx + 1)
     await ask_day5_question(callback.message, state)

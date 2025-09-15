@@ -7,6 +7,7 @@ import db
 import texts
 from states import Day4States
 from utils import safe_delete_message
+from config import PODCAST_URL
 
 router = Router()
 
@@ -46,9 +47,18 @@ async def send_day4_video(message: types.Message, state: FSMContext):
     
     if case_idx >= len(texts.DAY4_CASES):
         # Все кейсы пройдены
-        await message.answer(random.choice(texts.DAY4_FINAL_MOTIVATION))
-        await db.mark_day_completed(message.from_user.id, 4)
-        await db.add_result(message.from_user.id, "Тренер интонации")
+        await db.mark_day_completed(message.chat.id, 4)
+        await db.add_result(message.chat.id, "Тренер интонации")
+        await message.answer_photo(
+            photo=types.FSInputFile("img/Тренер интонации.png"),
+            caption=random.choice(texts.DAY4_FINAL_MOTIVATION)
+        )
+        await message.answer(
+            "День 4 пройден! Вы можете проверить свои баллы в профиле.",
+            reply_markup=types.InlineKeyboardMarkup(inline_keyboard=[
+                [types.InlineKeyboardButton(text="🎧 Послушать подкаст (5 мин)", url=PODCAST_URL)]
+            ])
+        )
         await state.clear()
         return
 
@@ -98,6 +108,7 @@ async def ask_day4_question(message: types.Message, state: FSMContext):
 @router.callback_query(Day4States.QUIZ, F.data.startswith("day4:answer:"))
 async def handle_day4_answer(callback: types.CallbackQuery, state: FSMContext):
     """Обрабатывает ответ пользователя на вопрос викторины."""
+    await db.create_user(callback.from_user.id, callback.from_user.username)
     _, _, case_idx_str, answer_idx_str = callback.data.split(":")
     case_idx = int(case_idx_str)
     answer_idx = int(answer_idx_str)
@@ -110,7 +121,7 @@ async def handle_day4_answer(callback: types.CallbackQuery, state: FSMContext):
     await state.update_data(sent_messages=[])
 
     if case_idx != data.get("case_idx"):
-        await callback.answer("Этот вопрос уже неактуален.", show_alert=True)
+        await callback.answer("Этот вопрос уже не актуален.", show_alert=True)
         return
 
     case = texts.DAY4_CASES[case_idx]
