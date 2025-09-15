@@ -1,5 +1,7 @@
 import logging
 import uuid
+import os
+import random
 from aiogram import Router, types, F
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
@@ -33,13 +35,42 @@ async def cmd_start(message: types.Message, state: FSMContext):
     await state.clear()
     await message.answer_photo(
         photo=types.FSInputFile("img/Старт.png"), 
-        caption="Привет! Это бот «Неделя знаний Северсталь». Нажмите «Начать день», чтобы перейти к активностям.",
+        caption="""
+Привет, дорогие друзья! 👋
+Рады вас видеть на нашей Неделе знаний, посвященной командной коммуникации. Эта неделя — возможность взглянуть на то, как мы общаемся, как слышим друг друга и как доносим свои мысли в команде.
+Вас ждет насыщенная программа:
+ • интерактивные квизы, чтобы лучше понять свой стиль общения
+ • мотивационные карточки, которые помогут вдохновиться и применить новые подходы
+ • веб-новелла - анализируйте и делайте выбор, который сформирует путь героев
+ • викторина, в формате видео и звуковых кейсов
+ • финальный квиз, где вы сможете проверить, чему научились за эти дни.
+Каждый день — короткий 5-минутный подкаст: включайте его за кофе и получайте пищу для размышлений на день. 🎧
+
+ В конце недели вы выйдете с конкретными приёмами, ясным пониманием собственного стиля и умением слышать и доносить мысли чётко.
+Ну что, готовы? Давайте начнём с первого дня! 🚀
+""",
         reply_markup=keyboards.main_menu_kb()
     )
 
 @router.message(F.text.in_({"Помощь", "/help"}))
 async def btn_help(message: types.Message):
     await message.answer(USER_COMMANDS_TEXT, parse_mode=None)
+
+@router.message(F.text == "Генератор мемов")
+async def btn_meme_generator(message: types.Message):
+    meme_folder = "img/mem"
+    memes = [f for f in os.listdir(meme_folder) if os.path.isfile(os.path.join(meme_folder, f))]
+    if not memes:
+        await message.answer("Извините, мемы временно недоступны.")
+        return
+    
+    random_meme = random.choice(memes)
+    meme_path = os.path.join(meme_folder, random_meme)
+    
+    await message.answer_photo(
+        photo=types.FSInputFile(meme_path),
+        caption="Смех — лучший коммуникатор"
+    )
 
 @router.message(F.text == "Профиль")
 async def btn_profile(message: types.Message):
@@ -100,7 +131,7 @@ async def btn_profile(message: types.Message):
 
 # ===== Обработка дней =====
 
-@router.message(F.text == "Начать день")
+@router.message(F.text == "Задания")
 async def btn_start_day(message: types.Message, state: FSMContext):
     await db.create_user(message.from_user.id, message.from_user.username)
     current_day = await db.get_current_day()

@@ -47,8 +47,8 @@ async def send_day4_video(message: types.Message, state: FSMContext):
     if case_idx >= len(texts.DAY4_CASES):
         # Все кейсы пройдены
         await message.answer(random.choice(texts.DAY4_FINAL_MOTIVATION))
-        db.mark_day_completed(message.from_user.id, 4)
-        db.add_result(message.from_user.id, "Тренер интонации")
+        await db.mark_day_completed(message.from_user.id, 4)
+        await db.add_result(message.from_user.id, "Тренер интонации")
         await state.clear()
         return
 

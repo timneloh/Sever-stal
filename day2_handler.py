@@ -1,3 +1,4 @@
+import json
 from aiogram import Router, types, F
 from aiogram.fsm.context import FSMContext
 
@@ -17,7 +18,8 @@ def parse_idx(cb_data: str) -> int | None:
 # ===== ДЕНЬ 2: КАРТОЧКИ =====
 
 async def start_day2(message: types.Message, state: FSMContext):
-    progress = db.get_day_progress(message.from_user.id, 2)
+    progress_str = await db.get_day_progress(message.from_user.id, 2)
+    progress = json.loads(progress_str) if isinstance(progress_str, str) else progress_str
 
     if len(progress.get("cards_opened", [])) >= 5:
         await message.answer(
@@ -25,12 +27,13 @@ async def start_day2(message: types.Message, state: FSMContext):
             reply_markup=keyboards.back_to_menu_inline()
         )
         # Отмечаем день пройденным, если еще не отмечен
-        if not db.has_completed_day(message.from_user.id, 2):
-            db.mark_day_completed(message.from_user.id, 2)
+        if not await db.has_completed_day(message.from_user.id, 2):
+            await db.mark_day_completed(message.from_user.id, 2)
             await message.answer(texts.DAY2_ALL_CARDS_OPENED)
         return
 
     await state.set_state(Day2States.CHOOSE_CARD)
+    await db.add_result(message.from_user.id, "Мотивационная карточка дня")
 
     opened_cards = progress.get("cards_opened", [])
     caption_text = texts.DAY2_INTRO
@@ -43,6 +46,7 @@ async def start_day2(message: types.Message, state: FSMContext):
         caption=caption_text,
         reply_markup=keyboards.day2_cards_kb(opened_cards)
     )
+
 
 @router.callback_query(Day2States.CHOOSE_CARD, F.data.startswith("day2:card:"))
 async def handle_day2_card(callback: types.CallbackQuery, state: FSMContext):
