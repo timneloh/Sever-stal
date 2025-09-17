@@ -184,7 +184,18 @@ async def show_fun_result(message: types.Message, state: FSMContext):
         f"{result['tip']}"
     )
     share_text = f"{result['share']} А какой у тебя? Пройди тест в боте «Неделя знаний Северсталь»!"
-    await message.answer(result_message, reply_markup=keyboards.fun_result_kb(share_text))
+    
+    image_path = f"img/{result['title']}.png"
+
+    try:
+        await message.answer_photo(
+            photo=types.FSInputFile(image_path),
+            caption=result_message,
+            reply_markup=keyboards.fun_result_kb(share_text)
+        )
+    except Exception as e:
+        logging.warning(f"Не удалось отправить фото {image_path}: {e}. Отправляю текстом.")
+        await message.answer(result_message, reply_markup=keyboards.fun_result_kb(share_text))
     
     uid = message.chat.id
     await db.add_result(uid, result['title']) # Сохраняем результат
