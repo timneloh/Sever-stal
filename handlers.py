@@ -208,9 +208,28 @@ async def cmd_set_day(message: types.Message):
     day = int(args[1])
     if 1 <= day <= EVENT_DAYS:
         await db.set_current_day(day)
-        await message.answer("✅ День установлен: {day}")
+        await message.answer(f"✅ День установлен: {day}")
     else:
         await message.answer(f"⚠️ День должен быть в диапазоне 1-{EVENT_DAYS}.")
+
+@router.message(Command("def"))
+async def cmd_reset_progress(message: types.Message):
+    if not is_admin(message.from_user.id): return
+    args = message.text.split()
+    if len(args) != 2 or not args[1].isdigit():
+        await message.answer("Использование: /def <user_id>")
+        return
+    
+    user_id_to_reset = int(args[1])
+    
+    # Проверка, существует ли такой пользователь
+    profile = await db.get_profile(user_id_to_reset)
+    if not profile:
+        await message.answer(f"Пользователь с ID {user_id_to_reset} не найден.")
+        return
+
+    await db.reset_user_progress(user_id_to_reset)
+    await message.answer(f"✅ Прогресс для пользователя ID {user_id_to_reset} полностью сброшен.")
 
 # ===== "Ловец" всех остальных сообщений =====
 

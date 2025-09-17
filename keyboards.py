@@ -60,9 +60,14 @@ def day2_cards_kb(opened_cards: list[int]) -> types.InlineKeyboardMarkup:
         text = f"✅ Карточка {i+1} (открыто)" if i in opened_cards else f"🎴 Карточка {i+1}"
         cb_data = "day2:opened" if i in opened_cards else f"day2:card:{i}"
         buttons.append([types.InlineKeyboardButton(text=text, callback_data=cb_data)])
-        [types.InlineKeyboardButton(text="🎧 Послушать подкаст (5 мин)", url=PODCAST_URL)],
+    buttons.append([types.InlineKeyboardButton(text="🎧 Послушать подкаст (5 мин)", url=PODCAST_URL)])
     buttons.append([types.InlineKeyboardButton(text="В главное меню", callback_data="nav:main")])
     return types.InlineKeyboardMarkup(inline_keyboard=buttons)
+
+def day2_after_card_kb() -> types.InlineKeyboardMarkup:
+    return types.InlineKeyboardMarkup(inline_keyboard=[
+        [types.InlineKeyboardButton(text="⬅️ Назад к карточкам", callback_data="day2:back_to_cards")]
+    ])
 
 # --- День 3 ---
 def day3_hero_select_kb(heroes_keys: list, current_idx: int) -> types.InlineKeyboardMarkup:

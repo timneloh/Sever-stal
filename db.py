@@ -139,8 +139,13 @@ async def update_day_progress_data(user_id, day_number, new_data_dict):
     pool = await get_pool()
     async with pool.acquire() as conn:
         async with conn.transaction():
-            current_data = await conn.fetchval('SELECT data FROM daily_progress WHERE user_id = $1 AND day_number = $2', user_id, day_number)
-            current_data = current_data if current_data else {}
+            current_data_str = await conn.fetchval('SELECT data FROM daily_progress WHERE user_id = $1 AND day_number = $2', user_id, day_number)
+            
+            if isinstance(current_data_str, str):
+                current_data = json.loads(current_data_str)
+            else:
+                current_data = current_data_str if current_data_str else {}
+
             current_data.update(new_data_dict)
             
             await conn.execute(
@@ -150,7 +155,8 @@ async def update_day_progress_data(user_id, day_number, new_data_dict):
             )
 
 async def mark_card_opened(user_id, day_number, card_idx):
-    progress = await get_day_progress(user_id, day_number)
+    progress_str = await get_day_progress(user_id, day_number)
+    progress = json.loads(progress_str) if isinstance(progress_str, str) else progress_str
     opened_cards = progress.get("cards_opened", [])
     if card_idx not in opened_cards:
         opened_cards.append(card_idx)
@@ -161,3 +167,17 @@ async def has_completed_all_days(user_id):
     pool = await get_pool()
     completed_days = await pool.fetchval('SELECT COUNT(*) FROM daily_progress WHERE user_id = $1 AND completed = 1', user_id)
     return (completed_days or 0) >= EVENT_DAYS
+
+async def reset_user_progress(user_id):
+    """Сбрасывает прогресс пользователя."""
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        async with conn.transaction():
+            # Сброс очков и связанных данных в таблице users
+            await conn.execute(
+                "UPDATE users SET points = 0, rewards = '[]'::jsonb, results = '[]'::jsonb, reflection = NULL WHERE id = $1",
+                user_id
+            )
+            # Удаление всего прогресса по дням
+            await conn.execute('DELETE FROM daily_progress WHERE user_id = $1', user_id)
+    print(f"LOG WRITE: Прогресс для пользователя ID={user_id} был полностью сброшен.")
