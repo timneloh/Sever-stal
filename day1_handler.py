@@ -168,8 +168,26 @@ async def show_fun_result(message: types.Message, state: FSMContext):
         f"{result['tip']}"
     )
     share_text = f"{result['share']} А какой у тебя? Пройди тест в боте «Неделя знаний Северсталь»!"
-    await message.answer(result_message, reply_markup=keyboards.fun_result_kb(share_text))
     
+    # Отправляем карточку с изображением
+    image_title = result['title']
+    if image_title == "Человек-маска":
+        image_title = "Человек маска"
+    elif image_title == "Тик‑токер оперативный":
+        image_title = "ТикТокер"
+
+    photo_path = f"img/{image_title}.png"
+    try:
+        await message.answer_photo(
+            photo=types.FSInputFile(photo_path),
+            caption=result_message,
+            reply_markup=keyboards.fun_result_kb(share_text)
+        )
+    except Exception as e:
+        logging.error(f"Failed to send photo {photo_path}: {e}")
+        # Если фото не найдено, отправить текстовое сообщение
+        await message.answer(result_message, reply_markup=keyboards.fun_result_kb(share_text))
+
     uid = message.chat.id
     await db.add_result(uid, result['title']) # Сохраняем результат
     if not await db.has_completed_day(uid, 1):
@@ -178,6 +196,7 @@ async def show_fun_result(message: types.Message, state: FSMContext):
         await message.answer("🎉 Вам начислено <b>+10 баллов</b> за прохождение теста!")
         
     await state.set_state(TestStates.CHOOSE_TEST)
+
 
 @router.callback_query(F.data == "day1:fun", TestStates.CHOOSE_TEST)
 async def start_day1_fun(callback: types.CallbackQuery, state: FSMContext):
