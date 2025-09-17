@@ -57,10 +57,24 @@ async def show_disc_result(message: types.Message, state: FSMContext):
     )
     
     share_text = f"Мой коммуникационный профиль по DiSC — {result['title']}. А какой у тебя? Пройди тест в боте «Неделя знаний Северсталь»!"
-    await message.answer(result_message, reply_markup=keyboards.disc_result_kb(share_text))
     
-    motivational_card = texts.get_motivational_card(profile)
-    await message.answer(f"✨ <i>{motivational_card}</i> ✨")
+    # Формируем путь к изображению в зависимости от профиля
+    if len(profile) == 1:
+        image_path = f"img/Мотивация после теста {profile}.png"
+    else:
+        # Для комбинированных профилей (e.g., "DS" -> "Ds")
+        profile_filename = profile[0] + profile[1].lower()
+        image_path = f"img/Комбинированные профили {profile_filename}.png"
+
+    try:
+        await message.answer_photo(
+            photo=types.FSInputFile(image_path),
+            caption=result_message,
+            reply_markup=keyboards.disc_result_kb(share_text)
+        )
+    except Exception as e:
+        logging.warning(f"Не удалось отправить фото {image_path}: {e}. Отправляю текстом.")
+        await message.answer(result_message, reply_markup=keyboards.disc_result_kb(share_text))
 
     uid = message.chat.id
     await db.add_result(uid, result['title']) # Сохраняем результат
@@ -70,6 +84,8 @@ async def show_disc_result(message: types.Message, state: FSMContext):
         await message.answer("🎉 Вам начислено <b>+10 баллов</b> за прохождение теста!")
     
     await state.set_state(TestStates.CHOOSE_TEST)
+
+
 
 @router.callback_query(F.data == "day1:serious", TestStates.CHOOSE_TEST)
 async def start_day1_serious(callback: types.CallbackQuery, state: FSMContext):
