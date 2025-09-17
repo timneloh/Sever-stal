@@ -22,14 +22,14 @@ async def start_day2(message: types.Message, state: FSMContext):
     progress = json.loads(progress_str) if isinstance(progress_str, str) else progress_str
 
     if len(progress.get("cards_opened", [])) >= 5:
-        await message.answer(
-            "Ты уже открыл все карточки сегодня. Отличная работа! Возвращайся завтра.",
+        await message.answer_photo(
+            photo=types.FSInputFile("img/Мотивационная карточка-5.png"),
+            caption=texts.DAY2_ALL_CARDS_OPENED,
             reply_markup=keyboards.back_to_menu_inline()
         )
         # Отмечаем день пройденным, если еще не отмечен
         if not await db.has_completed_day(message.from_user.id, 2):
             await db.mark_day_completed(message.from_user.id, 2)
-            await message.answer(texts.DAY2_ALL_CARDS_OPENED)
         return
 
     await state.set_state(Day2States.CHOOSE_CARD)
@@ -64,9 +64,13 @@ async def handle_day2_card(callback: types.CallbackQuery, state: FSMContext):
         f"{card['task']}"
     )
     
-    # Можно добавить разные фото для карточек
+    if card_idx == 0:
+        photo_path = "img/Мотивационная карточка.png"
+    else:
+        photo_path = f"img/Мотивационная карточка-{card_idx}.png"
+
     await callback.message.answer_photo(
-        photo="https://placehold.co/600x400/2E2E2E/FFFFFF?text=Day+2",
+        photo=types.FSInputFile(photo_path),
         caption=card_text
     )
     await callback.message.answer("✅ Отлично! <b>+3 балла</b> добавлены в твой профиль.")

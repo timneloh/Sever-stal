@@ -185,7 +185,8 @@ async def show_fun_result(message: types.Message, state: FSMContext):
     )
     share_text = f"{result['share']} А какой у тебя? Пройди тест в боте «Неделя знаний Северсталь»!"
     
-    image_path = f"img/{result['title']}.png"
+    image_filename = texts.ARCHETYPE_IMAGES.get(archetype_key, "заглушка.png")
+    image_path = f"img/{image_filename}"
 
     try:
         await message.answer_photo(
@@ -196,7 +197,7 @@ async def show_fun_result(message: types.Message, state: FSMContext):
     except Exception as e:
         logging.warning(f"Не удалось отправить фото {image_path}: {e}. Отправляю текстом.")
         await message.answer(result_message, reply_markup=keyboards.fun_result_kb(share_text))
-    
+
     uid = message.chat.id
     await db.add_result(uid, result['title']) # Сохраняем результат
     if not await db.has_completed_day(uid, 1):
@@ -205,6 +206,7 @@ async def show_fun_result(message: types.Message, state: FSMContext):
         await message.answer("🎉 Вам начислено <b>+10 баллов</b> за прохождение теста!")
         
     await state.set_state(TestStates.CHOOSE_TEST)
+
 
 @router.callback_query(F.data == "day1:fun", TestStates.CHOOSE_TEST)
 async def start_day1_fun(callback: types.CallbackQuery, state: FSMContext):
