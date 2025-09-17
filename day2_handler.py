@@ -18,26 +18,30 @@ def parse_idx(cb_data: str) -> int | None:
 # ===== ДЕНЬ 2: КАРТОЧКИ =====
 
 async def start_day2(message: types.Message, state: FSMContext):
-    progress_str = await db.get_day_progress(message.from_user.id, 2)
+    uid = message.from_user.id
+    progress_str = await db.get_day_progress(uid, 2)
     progress = json.loads(progress_str) if isinstance(progress_str, str) else progress_str
+    opened_cards = progress.get("cards_opened", [])
 
-    if len(progress.get("cards_opened", [])) >= 5:
-        await message.answer(
-            "Ты уже открыл все карточки сегодня. Отличная работа! Возвращайся завтра.",
+    # Проверяем, открыты ли все 5 основных карточек
+    if len(opened_cards) >= 5:
+        # Если все 5 открыты, показываем финальную 6-ю карточку
+        await message.answer_photo(
+            photo=types.FSInputFile("img/Мотивационная карточка-5.png"),
+            caption=texts.DAY2_ALL_CARDS_OPENED,
             reply_markup=keyboards.back_to_menu_inline()
         )
         # Отмечаем день пройденным, если еще не отмечен
-        if not await db.has_completed_day(message.from_user.id, 2):
-            await db.mark_day_completed(message.from_user.id, 2)
-            await message.answer(texts.DAY2_ALL_CARDS_OPENED)
+        if not await db.has_completed_day(uid, 2):
+            await db.mark_day_completed(uid, 2)
+            # Можно добавить доп. баллы за завершение
         return
 
+    # Если еще не все карточки открыты, продолжаем обычную логику
     await state.set_state(Day2States.CHOOSE_CARD)
-    await db.add_result(message.from_user.id, "Мотивационная карточка дня")
+    await db.add_result(uid, "Мотивационная карточка дня")
 
-    opened_cards = progress.get("cards_opened", [])
     caption_text = texts.DAY2_INTRO
-
     if opened_cards:
         caption_text = f"Продолжим! У тебя осталось {5 - len(opened_cards)} карточек на сегодня.\n\n" + caption_text
 
@@ -64,9 +68,14 @@ async def handle_day2_card(callback: types.CallbackQuery, state: FSMContext):
         f"{card['task']}"
     )
     
-    # Можно добавить разные фото для карточек
+    # Определяем путь к изображению в зависимости от индекса
+    if card_idx == 0:
+        photo_path = "img/Мотивационная карточка.png"
+    else:
+        photo_path = f"img/Мотивационная карточка-{card_idx}.png"
+
     await callback.message.answer_photo(
-        photo="https://placehold.co/600x400/2E2E2E/FFFFFF?text=Day+2",
+        photo=types.FSInputFile(photo_path),
         caption=card_text
     )
     await callback.message.answer("✅ Отлично! <b>+3 балла</b> добавлены в твой профиль.")
