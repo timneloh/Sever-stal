@@ -1,13 +1,25 @@
 from aiogram import types
-from config import PODCAST_URL
+from config import PODCAST_URL, EVENT_DAYS
 
 def main_menu_kb() -> types.ReplyKeyboardMarkup:
     buttons = [
-        [types.KeyboardButton(text="Задания")],
+        [types.KeyboardButton(text="Выбрать день")],
         [types.KeyboardButton(text="Генератор мемов")],
         [types.KeyboardButton(text="Профиль"), types.KeyboardButton(text="Помощь")],
     ]
     return types.ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True)
+
+def days_menu_kb(open_days: list[int]) -> types.InlineKeyboardMarkup:
+    buttons = []
+    for i in range(1, EVENT_DAYS + 1):
+        if i in open_days:
+            text = f"День {i}"
+            callback_data = f"select_day:{i}"
+        else:
+            text = f"🔒 День {i} (Закрыто)"
+            callback_data = "day_locked"
+        buttons.append([types.InlineKeyboardButton(text=text, callback_data=callback_data)])
+    return types.InlineKeyboardMarkup(inline_keyboard=buttons)
 
 def back_to_menu_inline() -> types.InlineKeyboardMarkup:
     return types.InlineKeyboardMarkup(inline_keyboard=[
@@ -19,7 +31,6 @@ def day1_mode_kb() -> types.InlineKeyboardMarkup:
     return types.InlineKeyboardMarkup(inline_keyboard=[
         [types.InlineKeyboardButton(text="Ты на работе (серьёзный тест)", callback_data="day1:serious")],
         [types.InlineKeyboardButton(text="Твоё Альтер-эго (шуточный тест)", callback_data="day1:fun")],
-        [types.InlineKeyboardButton(text="В главное меню", callback_data="nav:main")],
     ])
 
 def slider_kb() -> types.InlineKeyboardMarkup:
@@ -61,7 +72,6 @@ def day2_cards_kb(opened_cards: list[int]) -> types.InlineKeyboardMarkup:
         cb_data = "day2:opened" if i in opened_cards else f"day2:card:{i}"
         buttons.append([types.InlineKeyboardButton(text=text, callback_data=cb_data)])
     buttons.append([types.InlineKeyboardButton(text="🎧 Послушать подкаст (5 мин)", url=PODCAST_URL)])
-    buttons.append([types.InlineKeyboardButton(text="В главное меню", callback_data="nav:main")])
     return types.InlineKeyboardMarkup(inline_keyboard=buttons)
 
 def day2_after_card_kb() -> types.InlineKeyboardMarkup:
@@ -82,7 +92,6 @@ def day3_hero_select_kb(heroes_keys: list, current_idx: int) -> types.InlineKeyb
             types.InlineKeyboardButton(text="Выбрать", callback_data=f"day3:hero_choose:{current_hero_key}"),
             types.InlineKeyboardButton(text="→", callback_data=f"day3:hero_nav:{next_idx}")
         ],
-        [types.InlineKeyboardButton(text="В главное меню", callback_data="nav:main")]
     ]
     return types.InlineKeyboardMarkup(inline_keyboard=buttons)
 
@@ -95,7 +104,6 @@ def day3_after_comics_kb() -> types.InlineKeyboardMarkup:
         [types.InlineKeyboardButton(text="Пройти викторину", callback_data="day3:start_quiz")],
         [types.InlineKeyboardButton(text="Выбрать другого героя", callback_data="day3:choose_another_hero")],
         [types.InlineKeyboardButton(text="🎧 Послушать подкаст (5 мин)", url=PODCAST_URL)],
-        [types.InlineKeyboardButton(text="В главное меню", callback_data="nav:main")]
     ])
 
 def day3_quiz_kb(options: list) -> types.InlineKeyboardMarkup:

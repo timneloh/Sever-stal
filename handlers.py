@@ -12,9 +12,8 @@ from config import EVENT_DAYS
 import db
 import keyboards
 from commands import USER_COMMANDS_TEXT, ADMIN_COMMANDS_TEXT
-from utils import is_admin, to_main_menu # <-- ИМПОРТ ИЗ UTILS
+from utils import is_admin, to_main_menu
 
-# Импортируем стартовые функции для каждого дня
 from day1_handler import start_day1
 from day2_handler import start_day2
 from day3_handler import start_day3
@@ -22,10 +21,6 @@ from day4_handler import start_day4
 from day5_handler import start_day5
 
 router = Router()
-
-# ===== Вспомогательные функции =====
-
-
 
 # ===== Основные команды =====
 
@@ -39,7 +34,7 @@ async def cmd_start(message: types.Message, state: FSMContext):
 <b>Привет, команда! 👋</b>
 Добро пожаловать на Неделю знаний, посвящённую искусству командной коммуникации.
 Это отличный шанс взглянуть по-новому на то, как мы говорим, слушаем
-и доносим идеи друг до друга.
+и доносим идеи друг к другу.
 
 <b>В программе недели:</b>
 • интерактивные квизы — узнаем ваш стиль общения;
@@ -56,13 +51,10 @@ async def cmd_start(message: types.Message, state: FSMContext):
 чёткое понимание собственного стиля
 и уверенность в том, как ясно доносить мысли.
 
-Готовы? Начинаем День 1! 🚀
+Готовы? Начинаем! 🚀
 """,
         reply_markup=keyboards.main_menu_kb(),
-        
     )
-
-
 
 @router.message(F.text.in_({"Помощь", "/help"}))
 async def btn_help(message: types.Message):
@@ -91,26 +83,14 @@ async def btn_profile(message: types.Message):
         await message.answer("Профиль не найден. Нажмите /start, чтобы начать.", reply_markup=keyboards.main_menu_kb())
         return
 
-    # Преобразуем rewards из JSON-строки в список
     rewards_val = profile.get('rewards')
-    rewards_list = []
-    if isinstance(rewards_val, str) and rewards_val:
-        rewards_list = json.loads(rewards_val)
-    elif isinstance(rewards_val, list):
-        rewards_list = rewards_val
+    rewards_list = json.loads(rewards_val) if isinstance(rewards_val, str) and rewards_val else (rewards_val if isinstance(rewards_val, list) else [])
 
-    # Преобразуем results из JSON-строки в список
     results_val = profile.get('results')
-    results_list = []
-    if isinstance(results_val, str) and results_val:
-        results_list = json.loads(results_val)
-    elif isinstance(results_val, list):
-        results_list = results_val
+    results_list = json.loads(results_val) if isinstance(results_val, str) and results_val else (results_val if isinstance(results_val, list) else [])
 
-    # Логика наград
-    if await db.has_completed_all_days(message.from_user.id):
-        if "Мастер коммуникаций" not in rewards_list:
-            rewards_list.append("Мастер коммуникаций")
+    if await db.has_completed_all_days(message.from_user.id) and "Мастер коммуникаций" not in rewards_list:
+        rewards_list.append("Мастер коммуникаций")
     
     rewards_text = ', '.join(rewards_list) if rewards_list else "0"
     results_text = ', '.join(results_list) if results_list else "0"
@@ -129,24 +109,21 @@ async def btn_profile(message: types.Message):
         caption=caption
     )
     
-    # Выдача Digital Badge и сертификата
     if "Мастер коммуникаций" in rewards_list:
-        await message.answer_document(
-            document=types.FSInputFile("files/Digital_Badge.png"),
-            caption="Поздравляем! Вы получаете Digital Badge."
-        )
-        await message.answer_document(
-            document=types.FSInputFile("files/Certificate.pdf"),
-            caption="А также именной сертификат!"
-        )
-
+        await message.answer_document(document=types.FSInputFile("files/Digital_Badge.png"), caption="Поздравляем! Вы получаете Digital Badge.")
+        await message.answer_document(document=types.FSInputFile("files/Certificate.pdf"), caption="А также именной сертификат!")
 
 # ===== Обработка дней =====
 
-@router.message(F.text == "Задания")
-async def btn_start_day(message: types.Message, state: FSMContext):
-    await db.create_user(message.from_user.id, message.from_user.username)
-    current_day = await db.get_current_day()
+@router.message(F.text == "Выбрать день")
+async def btn_select_day(message: types.Message):
+    open_days = await db.get_open_days()
+    await message.answer("Выберите день, чтобы посмотреть его контент:", reply_markup=keyboards.days_menu_kb(open_days))
+
+@router.callback_query(F.data.startswith("select_day:"))
+async def cb_select_day(callback: types.CallbackQuery, state: FSMContext):
+    day = int(callback.data.split(":")[1])
+    await db.create_user(callback.from_user.id, callback.from_user.username)
 
     day_starters = {
         1: start_day1,
@@ -156,14 +133,16 @@ async def btn_start_day(message: types.Message, state: FSMContext):
         5: start_day5,
     }
     
-    starter = day_starters.get(current_day)
+    starter = day_starters.get(day)
     if starter:
-        await starter(message, state)
+        await starter(callback.message, state)
     else:
-        await message.answer(
-            f"День {current_day}: контент скоро будет доступен.",
-            reply_markup=keyboards.back_to_menu_inline()
-        )
+        await callback.message.answer(f"День {day}: контент скоро будет доступен.")
+    await callback.answer()
+
+@router.callback_query(F.data == "day_locked")
+async def cb_day_locked(callback: types.CallbackQuery):
+    await callback.answer("Этот день еще не открыт.", show_alert=True)
 
 @router.callback_query(F.data == "nav:main")
 async def nav_main(callback: types.CallbackQuery, state: FSMContext):
@@ -182,9 +161,7 @@ async def handle_inline_share(inline_query: InlineQuery):
         id=str(uuid.uuid4()),
         title="Отправить результат",
         description=query_text,
-        input_message_content=InputTextMessageContent(
-            message_text=query_text
-        ),
+        input_message_content=InputTextMessageContent(message_text=query_text),
         thumb_url="https://w7.pngwing.com/pngs/32/933/png-transparent-steel-industry-logo-severstal-industry-company-text-trademark.png",
     )
     
@@ -196,6 +173,24 @@ async def handle_inline_share(inline_query: InlineQuery):
 async def cmd_admin_help(message: types.Message):
     if not is_admin(message.from_user.id): return
     await message.answer(ADMIN_COMMANDS_TEXT, parse_mode=None)
+
+@router.message(Command("addday"))
+async def cmd_add_day(message: types.Message):
+    if not is_admin(message.from_user.id): return
+    opened_day = await db.open_next_day()
+    if opened_day:
+        await message.answer(f"✅ День {opened_day} успешно открыт!")
+    else:
+        await message.answer("⚠️ Все дни уже открыты.")
+
+@router.message(Command("closeday"))
+async def cmd_close_day(message: types.Message):
+    if not is_admin(message.from_user.id): return
+    closed_day = await db.close_last_day()
+    if closed_day:
+        await message.answer(f"✅ День {closed_day} успешно закрыт!")
+    else:
+        await message.answer("⚠️ Нельзя закрыть первый день или все дни уже закрыты.")
 
 @router.message(Command("setday"))
 async def cmd_set_day(message: types.Message):
@@ -222,7 +217,6 @@ async def cmd_reset_progress(message: types.Message):
     
     user_id_to_reset = int(args[1])
     
-    # Проверка, существует ли такой пользователь
     profile = await db.get_profile(user_id_to_reset)
     if not profile:
         await message.answer(f"Пользователь с ID {user_id_to_reset} не найден.")

@@ -20,8 +20,6 @@ async def get_pool():
             print("LOG: Пул соединений успешно создан.")
         except Exception as e:
             print(f"FATAL: Не удалось подключиться к PostgreSQL: {e}")
-            # В реальном приложении здесь может быть более сложная логика
-            # Например, попытки переподключения или аварийное завершение
             raise
     return POOL
 
@@ -58,7 +56,68 @@ async def init_db():
                 value TEXT
             )
         ''')
+
+        await conn.execute('''
+            CREATE TABLE IF NOT EXISTS days (
+                day_number INTEGER PRIMARY KEY,
+                is_open BOOLEAN DEFAULT FALSE
+            )
+        ''')
     print("LOG: Инициализация БД PostgreSQL завершена.")
+
+async def init_days():
+    """Заполняет таблицу дней, если она пуста."""
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        count = await conn.fetchval('SELECT COUNT(*) FROM days')
+        if count == 0:
+            print("LOG: Таблица 'days' пуста. Инициализация дней...")
+            for i in range(1, EVENT_DAYS + 1):
+                is_open = (i == 1)
+                await conn.execute(
+                    'INSERT INTO days (day_number, is_open) VALUES ($1, $2)',
+                    i, is_open
+                )
+            print(f"LOG: Таблица 'days' инициализирована. День 1 открыт.")
+
+# --- Управление днями ---
+async def open_next_day():
+    """Открывает следующий закрытый день."""
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        next_day_to_open = await conn.fetchval(
+            'SELECT day_number FROM days WHERE is_open = FALSE ORDER BY day_number LIMIT 1'
+        )
+        if next_day_to_open:
+            await conn.execute(
+                'UPDATE days SET is_open = TRUE WHERE day_number = $1',
+                next_day_to_open
+            )
+            print(f"LOG WRITE: День {next_day_to_open} был открыт.")
+            return next_day_to_open
+        return None
+
+async def close_last_day():
+    """Закрывает последний открытый день, кроме первого."""
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        last_day_to_close = await conn.fetchval(
+            'SELECT day_number FROM days WHERE is_open = TRUE ORDER BY day_number DESC LIMIT 1'
+        )
+        if last_day_to_close and last_day_to_close > 1:
+            await conn.execute(
+                'UPDATE days SET is_open = FALSE WHERE day_number = $1',
+                last_day_to_close
+            )
+            print(f"LOG WRITE: День {last_day_to_close} был закрыт.")
+            return last_day_to_close
+        return None
+
+async def get_open_days():
+    """Возвращает список номеров открытых дней."""
+    pool = await get_pool()
+    records = await pool.fetch('SELECT day_number FROM days WHERE is_open = TRUE ORDER BY day_number')
+    return [record['day_number'] for record in records]
 
 # --- Состояние бота ---
 async def set_bot_state(key, value):
@@ -81,7 +140,6 @@ async def set_current_day(day: int):
 # --- Пользователи ---
 async def create_user(user_id, username):
     pool = await get_pool()
-    # ON CONFLICT DO NOTHING игнорирует вставку, если пользователь уже существует
     result = await pool.execute('INSERT INTO users (id, username) VALUES ($1, $2) ON CONFLICT (id) DO NOTHING', user_id, username)
     if result == 'INSERT 0 1':
         print(f"LOG WRITE: Создан пользователь с ID={user_id}, username='{username}'")
@@ -93,7 +151,6 @@ async def update_points(user_id, points_to_add):
 
 async def get_profile(user_id):
     pool = await get_pool()
-    # fetchrow возвращает asyncpg.Record, который работает как словарь
     user_row = await pool.fetchrow('SELECT * FROM users WHERE id = $1', user_id)
     return dict(user_row) if user_row else None
 
@@ -173,11 +230,9 @@ async def reset_user_progress(user_id):
     pool = await get_pool()
     async with pool.acquire() as conn:
         async with conn.transaction():
-            # Сброс очков и связанных данных в таблице users
             await conn.execute(
                 "UPDATE users SET points = 0, rewards = '[]'::jsonb, results = '[]'::jsonb, reflection = NULL WHERE id = $1",
                 user_id
             )
-            # Удаление всего прогресса по дням
             await conn.execute('DELETE FROM daily_progress WHERE user_id = $1', user_id)
     print(f"LOG WRITE: Прогресс для пользователя ID={user_id} был полностью сброшен.")
