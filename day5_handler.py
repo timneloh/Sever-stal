@@ -38,8 +38,10 @@ async def ask_day5_question(message: types.Message, state: FSMContext):
         return
 
     question = texts.DAY5_QUIZ_QUESTIONS[q_idx]
-    sent_message = await message.answer(
-        f"<b>Вопрос {q_idx+1}/{len(texts.DAY5_QUIZ_QUESTIONS)}</b>\n{question['text']}",
+    image_path = f"img/final-quiz-day/фин квиз-{q_idx + 1}.png"
+    sent_message = await message.answer_photo(
+        photo=types.FSInputFile(image_path),
+        caption=f"<b>Вопрос {q_idx+1}/{len(texts.DAY5_QUIZ_QUESTIONS)}</b>\n{question['text']}",
         reply_markup=keyboards.day5_quiz_kb(question['options'])
     )
     await state.update_data(sent_messages=[sent_message])
@@ -78,8 +80,10 @@ async def handle_day5_answer(callback: types.CallbackQuery, state: FSMContext):
     if answer_idx == question["correct"]:
         await state.update_data(correct_answers=data.get("correct_answers", 0) + 1)
         feedback_text = f"✅ Верно!\n<i>{question['comment']}</i>"
+        image_path = "img/final-quiz-day/фин квиз Ответ верный.png"
     else:
         feedback_text = f"❌ Неверно. Правильный ответ: {question['options'][question['correct']]}\n<i>{question['comment']}</i>"
+        image_path = "img/final-quiz-day/фин квиз Ответ Неверный.png"
 
     next_q_idx = q_idx + 1
     if next_q_idx >= len(texts.DAY5_QUIZ_QUESTIONS):
@@ -87,7 +91,11 @@ async def handle_day5_answer(callback: types.CallbackQuery, state: FSMContext):
     else:
         keyboard = keyboards.day5_next_question_kb()
 
-    await callback.message.answer(feedback_text, reply_markup=keyboard)
+    await callback.message.answer_photo(
+        photo=types.FSInputFile(image_path),
+        caption=feedback_text,
+        reply_markup=keyboard
+    )
     await state.update_data(q_idx=next_q_idx)
     await callback.answer()
 

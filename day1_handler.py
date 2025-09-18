@@ -186,7 +186,7 @@ async def show_fun_result(message: types.Message, state: FSMContext):
     share_text = f"{result['share']} А какой у тебя? Пройди тест в боте «Неделя знаний Северсталь»!"
     
     image_filename = texts.ARCHETYPE_IMAGES.get(archetype_key, "заглушка.png")
-    image_path = f"img/{image_filename}"
+    image_path = f"img/joke-test/{image_filename}"
 
     try:
         await message.answer_photo(
@@ -214,7 +214,10 @@ async def start_day1_fun(callback: types.CallbackQuery, state: FSMContext):
     await state.set_state(TestStates.FUN_TEST)
     scores = {archetype: 0 for archetype in texts.ARCHETYPES}
     await state.update_data(fun_q=0, fun_scores=scores)
-    await callback.message.answer(texts.FUN_TEST_INTRO)
+    await callback.message.answer_photo(
+        photo=types.FSInputFile("img/joke-test/Шуточный тест.png"),
+        caption=texts.FUN_TEST_INTRO
+    )
     await ask_next_fun_question(callback.message, state)
     await callback.answer()
 

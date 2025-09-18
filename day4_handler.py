@@ -96,9 +96,11 @@ async def ask_day4_question(message: types.Message, state: FSMContext):
     case = texts.DAY4_CASES[case_idx]
 
     question_text = "Что было не так в этой переписке?"
+    image_path = f"img/Аудио-викторина-{case_idx + 1}.png"
     
-    sent_message = await message.answer(
-        question_text,
+    sent_message = await message.answer_photo(
+        photo=types.FSInputFile(image_path),
+        caption=question_text,
         reply_markup=day4_quiz_kb(case['options'], case_idx)
     )
     # Сохраняем весь объект сообщения
