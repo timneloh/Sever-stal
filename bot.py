@@ -26,12 +26,12 @@ async def main():
     print("LOG: Bot создан")
     
     dp = Dispatcher()
-    dp.include_router(main_router)
     dp.include_router(day1_router)
     dp.include_router(day2_router)
     dp.include_router(day3_router)
     dp.include_router(day4_router)
     dp.include_router(day5_router)
+    dp.include_router(main_router) # Этот роутер должен быть последним
     print("LOG: Роутеры подключены")
 
     print("LOG: Запуск polling...")

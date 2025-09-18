@@ -126,3 +126,13 @@ def day5_after_quiz_kb() -> types.InlineKeyboardMarkup:
         [types.InlineKeyboardButton(text="Пройти рефлексию", callback_data="day5:start_reflection")],
         [types.InlineKeyboardButton(text="🎧 Послушать подкаст (5 мин)", url=PODCAST_URL)]
     ])
+
+def day5_next_question_kb() -> types.InlineKeyboardMarkup:
+    return types.InlineKeyboardMarkup(inline_keyboard=[
+        [types.InlineKeyboardButton(text="Следующий вопрос", callback_data="day5:next_question")]
+    ])
+
+def day5_finish_quiz_kb() -> types.InlineKeyboardMarkup:
+    return types.InlineKeyboardMarkup(inline_keyboard=[
+        [types.InlineKeyboardButton(text="Завершить квиз", callback_data="day5:finish_quiz")]
+    ])

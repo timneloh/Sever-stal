@@ -128,9 +128,16 @@ async def handle_day4_answer(callback: types.CallbackQuery, state: FSMContext):
 
     feedback_message = None # Переменная для хранения сообщения с фидбэком
 
-    if answer_idx == case["correct"]:
+    progress = await db.get_day_progress(callback.from_user.id, 4)
+    answered_cases = progress.get("answered_cases", [])
+
+    if case_idx in answered_cases:
+        feedback_message = await callback.message.answer(f"Вы уже отвечали на этот вопрос.")
+    elif answer_idx == case["correct"]:
         feedback_message = await callback.message.answer(f"✅ Да, это правильный вариант!\n\n<i>{case['comment']}</i>")
         await db.update_points(callback.from_user.id, 3)
+        answered_cases.append(case_idx)
+        await db.update_day_progress_data(callback.from_user.id, 4, {"answered_cases": answered_cases})
     else:
         correct_answer_text = case['options'][case['correct']]
         feedback_message = await callback.message.answer(f"❌ Этот ответ не правильный, правильный ответ: «{correct_answer_text}»\n\n<i>{case['comment']}</i>")
