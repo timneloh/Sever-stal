@@ -42,6 +42,14 @@ async def start_day2(message: types.Message, state: FSMContext):
                 reply_markup=keyboards.back_to_menu_inline()
             )
 
+        # Добавляем опросник на эмпатию
+        empathy_test_text = (
+            "<b>Опросник на определение уровня эмпатии (30 мин.)</b>\n\n"
+            "Какова твоя способность понимать других? Пройди тест на уровень эмпатии и получи персональные рекомендации от психолога. "
+            "Узнай, как развивать свою эмпатию и стать более чутким к окружающим!"
+        )
+        await message.answer(empathy_test_text, reply_markup=keyboards.empathy_test_kb())
+
         # Отмечаем день пройденным, если еще не отмечен
         if not await db.has_completed_day(uid, 2):
             await db.mark_day_completed(uid, 2)

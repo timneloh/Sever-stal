@@ -126,3 +126,8 @@ def day5_after_quiz_kb() -> types.InlineKeyboardMarkup:
         [types.InlineKeyboardButton(text="Пройти рефлексию", callback_data="day5:start_reflection")],
         [types.InlineKeyboardButton(text="🎧 Послушать подкаст (5 мин)", url=PODCAST_URL)]
     ])
+
+def empathy_test_kb() -> types.InlineKeyboardMarkup:
+    return types.InlineKeyboardMarkup(inline_keyboard=[
+        [types.InlineKeyboardButton(text="Пройти тест", url="https://example.com/empathy_test")]
+    ])
