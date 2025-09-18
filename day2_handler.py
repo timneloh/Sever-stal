@@ -87,9 +87,9 @@ async def handle_day2_card(callback: types.CallbackQuery, state: FSMContext):
     if card_idx in opened_cards:
         await callback.answer("Эта карточка уже была открыта.", show_alert=True)
         return
-    
-    await db.update_points(uid, 3)
+
     await db.mark_card_opened(uid, 2, card_idx)
+    await db.update_points(uid, 3)
     
     card = texts.DAY2_CARDS[card_idx]
     card_text = (

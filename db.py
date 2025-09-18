@@ -172,6 +172,15 @@ async def add_result(user_id, result_text):
                 await conn.execute('UPDATE users SET results = $1 WHERE id = $2', json.dumps(results), user_id)
                 print(f"LOG WRITE: Пользователю ID={user_id} добавлен результат '{result_text}'.")
 
+async def save_reflection(user_id, reflection_text):
+    """Сохраняет текст рефлексии пользователя."""
+    pool = await get_pool()
+    await pool.execute(
+        'UPDATE users SET reflection = $1 WHERE id = $2',
+        reflection_text, user_id
+    )
+    print(f"LOG WRITE: Для пользователя ID={user_id} сохранена рефлексия.")
+
 # --- Прогресс по дням ---
 async def mark_day_completed(user_id, day_number):
     pool = await get_pool()
@@ -190,6 +199,8 @@ async def has_completed_day(user_id, day_number):
 async def get_day_progress(user_id, day_number):
     pool = await get_pool()
     data = await pool.fetchval('SELECT data FROM daily_progress WHERE user_id = $1 AND day_number = $2', user_id, day_number)
+    if isinstance(data, str):
+        return json.loads(data)
     return data if data else {}
 
 async def update_day_progress_data(user_id, day_number, new_data_dict):
