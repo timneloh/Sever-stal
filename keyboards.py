@@ -79,12 +79,21 @@ def day2_cards_kb(opened_cards: list[int]) -> types.InlineKeyboardMarkup:
         text = f"✅ Карточка {i+1} (открыто)" if i in opened_cards else f"🎴 Карточка {i+1}"
         cb_data = "day2:opened" if i in opened_cards else f"day2:card:{i}"
         buttons.append([types.InlineKeyboardButton(text=text, callback_data=cb_data)])
+    buttons.append([types.InlineKeyboardButton(text="Пройти опрос на эмпатию (30 мин.)", callback_data="day2:empathy_test")])
     buttons.append([types.InlineKeyboardButton(text=f"🎧 {texts.PODCAST_TITLE} 2 дня (5 мин.)", callback_data="podcast:2")])
     return types.InlineKeyboardMarkup(inline_keyboard=buttons)
 
 def day2_after_card_kb() -> types.InlineKeyboardMarkup:
     return types.InlineKeyboardMarkup(inline_keyboard=[
         [types.InlineKeyboardButton(text="⬅️ Назад к карточкам", callback_data="day2:back_to_cards")]
+    ])
+
+def empathy_test_kb() -> types.InlineKeyboardMarkup:
+    return types.InlineKeyboardMarkup(inline_keyboard=[
+        [types.InlineKeyboardButton(
+            text="Пройти тест",
+            url="https://lk.severstal.com/needauth?url=https://study-srv.severstal.com/fiori#zhcmi713_ui5-display&/event?trainingId=90133771%26trainingType=D"
+        )]
     ])
 
 # --- День 3 ---

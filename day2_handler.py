@@ -42,8 +42,7 @@ async def start_day2(message: types.Message, state: FSMContext):
                 reply_markup=keyboards.back_to_menu_inline()
             )
 
-        # Добавляем опросник на эмпатию
-        await message.answer(texts.EMPATHY_TEST_TEXT, reply_markup=keyboards.empathy_test_kb())
+
 
         # Отмечаем день пройденным, если еще не отмечен
         if not await db.has_completed_day(uid, 2):
@@ -128,3 +127,8 @@ async def back_to_cards(callback: types.CallbackQuery, state: FSMContext):
 @router.callback_query(Day2States.CHOOSE_CARD, F.data == "day2:opened")
 async def handle_day2_opened_card(callback: types.CallbackQuery):
     await callback.answer("Эта карточка уже открыта.", show_alert=True)
+
+@router.callback_query(F.data == "day2:empathy_test")
+async def empathy_test(callback: types.CallbackQuery):
+    await callback.message.answer(texts.EMPATHY_TEST_TEXT, reply_markup=keyboards.empathy_test_kb())
+    await callback.answer()
