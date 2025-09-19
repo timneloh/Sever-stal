@@ -31,7 +31,7 @@ def profile_kb(show_rewards: bool = False) -> types.InlineKeyboardMarkup:
     buttons = []
     if show_rewards:
         buttons.append([types.InlineKeyboardButton(text="Получить сертификат", callback_data="get_certificate")])
-        buttons.append([types.InlineKeyboardButton(text="Получить стикеры", url="t.me/addstickers/название_стикерпака")])
+        buttons.append([types.InlineKeyboardButton(text="Получить стикеры", url="https://t.me/addstickers/NedelyaZnanij2025")])
     return types.InlineKeyboardMarkup(inline_keyboard=buttons)
 
 # --- День 1 ---

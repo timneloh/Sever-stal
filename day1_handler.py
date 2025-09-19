@@ -92,7 +92,10 @@ async def start_day1_serious(callback: types.CallbackQuery, state: FSMContext):
     await safe_delete_message(callback.message)
     await state.set_state(TestStates.SERIOUS_TEST)
     await state.update_data(disc_q=0, disc_scores={"D": 0, "i": 0, "S": 0, "C": 0})
-    await callback.message.answer(texts.SERIOUS_INTRO)
+    await callback.message.answer_photo(
+        photo=types.FSInputFile("img/DiSC тест.png"),
+        caption=texts.SERIOUS_INTRO
+    )
     await ask_next_disc_question(callback.message, state)
     await callback.answer()
 
