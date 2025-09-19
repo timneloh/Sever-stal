@@ -129,18 +129,19 @@ async def handle_reflection(message: types.Message, state: FSMContext):
         final_motivation = random.choice(texts.DAY5_FINAL_MOTIVATION_CARD_TEXTS)
         await db.add_result(message.from_user.id, final_motivation)
         
-        await message.answer(
+        full_caption = (
             "Спасибо за твой отзыв! Марафон завершен. Тебе начислено <b>+15 баллов.</b>\n\n"
             "Загляни в свой профиль, чтобы увидеть все результаты и награды!"
         )
-        await state.clear()
         
         # Отправка финальной фотокарточки
         image_path = f"img/{final_motivation}.png"
+        
         await message.answer_photo(
             photo=types.FSInputFile(image_path),
-            caption=final_motivation
+            caption=full_caption
         )
+        await state.clear()
     else:
         await message.answer("Вы уже прошли рефлексию.")
         await state.clear()
