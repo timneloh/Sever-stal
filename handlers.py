@@ -12,7 +12,7 @@ from config import EVENT_DAYS
 import db
 import keyboards
 from commands import USER_COMMANDS_TEXT, ADMIN_COMMANDS_TEXT
-from utils import is_admin, to_main_menu
+from utils import is_admin, to_main_menu, safe_delete_message
 
 from day1_handler import start_day1
 from day2_handler import start_day2
@@ -143,11 +143,20 @@ async def btn_select_day(message: types.Message):
 @router.callback_query(F.data.startswith("select_day:"))
 async def cb_select_day(callback: types.CallbackQuery, state: FSMContext):
     day = int(callback.data.split(":")[1])
-    await db.create_user(callback.from_user.id, callback.from_user.username)
+    uid = callback.from_user.id
+    await db.create_user(uid, callback.from_user.username)
 
+    # --- Специальная обработка для Дня 2 ---
+    if day == 2:
+        # Вызываем start_day2 с правильным user_id и флагом редактирования
+        await start_day2(user_id=uid, message=callback.message, state=state, edit_message=True)
+        await callback.answer()
+        return
+
+    # --- Стандартная логика для остальных дней ---
     day_starters = {
         1: start_day1,
-        2: start_day2,
+        # 2: start_day2, # Обрабатывается выше
         3: start_day3,
         4: start_day4,
         5: start_day5,
@@ -155,9 +164,12 @@ async def cb_select_day(callback: types.CallbackQuery, state: FSMContext):
     
     starter = day_starters.get(day)
     if starter:
+        # Для других дней удаляем старое меню и отправляем новое сообщение.
+        await safe_delete_message(callback.message)
         await starter(callback.message, state)
     else:
         await callback.message.answer(f"День {day}: контент скоро будет доступен.")
+    
     await callback.answer()
 
 @router.callback_query(F.data == "day_locked")

@@ -209,7 +209,6 @@ async def show_quiz_result(message: types.Message, state: FSMContext):
         f"Ваш результат: <b>{score} из {len(texts.DAY3_QUIZ['questions'])}</b> правильных ответов.\n\n"
         f"Ваш архетип: <b>{archetype}</b>\n\n"
         f"<i>{recommendation}</i>",
-        reply_markup=keyboards.back_to_menu_inline()
     )
 
     if not await db.has_completed_day(uid, 3):

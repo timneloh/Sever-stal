@@ -222,15 +222,6 @@ async def update_day_progress_data(user_id, day_number, new_data_dict):
                 user_id, day_number, json.dumps(current_data)
             )
 
-async def mark_card_opened(user_id, day_number, card_idx):
-    progress_str = await get_day_progress(user_id, day_number)
-    progress = json.loads(progress_str) if isinstance(progress_str, str) else progress_str
-    opened_cards = progress.get("cards_opened", [])
-    if card_idx not in opened_cards:
-        opened_cards.append(card_idx)
-    await update_day_progress_data(user_id, day_number, {"cards_opened": opened_cards})
-    print(f"LOG WRITE: Пользователь ID={user_id} открыл карточку Дня {day_number} #{card_idx}.")
-
 async def has_completed_all_days(user_id):
     pool = await get_pool()
     completed_days = await pool.fetchval('SELECT COUNT(*) FROM daily_progress WHERE user_id = $1 AND completed = 1', user_id)
