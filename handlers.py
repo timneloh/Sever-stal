@@ -88,26 +88,51 @@ async def btn_profile(message: types.Message):
     if await db.has_completed_all_days(message.from_user.id) and "Мастер коммуникаций" not in rewards_list:
         rewards_list.append("Мастер коммуникаций")
     
-    rewards_text = ', '.join(rewards_list) if rewards_list else "0"
-    results_text = ', '.join(results_list) if results_list else "0"
+    results_text = "\n" + "\n".join([f"• {item}" for item in results_list]) if results_list else " 0"
 
     caption = (
         f"<b>Профиль:</b>\n"
         f"ID: <code>{profile['id']}</code>\n"
         f"Логин: {profile['username'] or '—'}\n"
         f"Баллы: {profile['points']}\n\n"
-        f"<b>Результаты:</b> {results_text}\n"
-        f"<b>Награды:</b> {rewards_text}"
+        f"<b>Результаты:</b>{results_text}"
     )
+
+    show_rewards_buttons = False
+    day5_progress = await db.get_day_progress(message.from_user.id, 5)
+    if day5_progress:
+        quiz_done = day5_progress.get("quiz_completed", False)
+        reflection_done = day5_progress.get("reflection_completed", False)
+        if quiz_done and reflection_done and profile.get('points', 0) >= 60:
+            show_rewards_buttons = True
 
     await message.answer_photo(
         photo=types.FSInputFile("img/13.png"),
-        caption=caption
+        caption=caption,
+        reply_markup=keyboards.profile_kb(show_rewards=show_rewards_buttons)
     )
-    
-    if "Мастер коммуникаций" in rewards_list:
-        await message.answer_document(document=types.FSInputFile("files/Digital_Badge.png"), caption="Поздравляем! Вы получаете Digital Badge.")
-        await message.answer_document(document=types.FSInputFile("files/Certificate.pdf"), caption="А также именной сертификат!")
+
+@router.callback_query(F.data == "get_certificate")
+async def get_certificate_handler(callback: types.CallbackQuery):
+    user_id = callback.from_user.id
+    profile = await db.get_profile(user_id)
+    day5_progress = await db.get_day_progress(user_id, 5)
+    quiz_done = day5_progress.get("quiz_completed", False)
+    reflection_done = day5_progress.get("reflection_completed", False)
+
+    if quiz_done and reflection_done and profile.get('points', 0) >= 60:
+        try:
+            await callback.message.answer_photo(
+                photo=types.FSInputFile("img/certificate/Сертификат_Мастер коммникаций.png"),
+                caption="Поздравляем! Вот ваш сертификат."
+            )
+            await db.add_result(user_id, "Сертификат и стикеры")
+            await callback.answer("Сертификат отправлен!")
+        except Exception as e:
+            logging.error(f"Failed to send certificate: {e}")
+            await callback.answer("Не удалось отправить сертификат. Обратитесь к администратору.", show_alert=True)
+    else:
+        await callback.answer("Вы еще не выполнили условия для получения сертификата.", show_alert=True)
 
 # ===== Обработка дней =====
 

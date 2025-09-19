@@ -26,6 +26,13 @@ def back_to_menu_inline() -> types.InlineKeyboardMarkup:
         [types.InlineKeyboardButton(text="В главное меню", callback_data="nav:main")]
     ])
 
+def profile_kb(show_rewards: bool = False) -> types.InlineKeyboardMarkup:
+    buttons = []
+    if show_rewards:
+        buttons.append([types.InlineKeyboardButton(text="Получить сертификат", callback_data="get_certificate")])
+        buttons.append([types.InlineKeyboardButton(text="Получить стикеры", url="t.me/addstickers/название_стикерпака")])
+    return types.InlineKeyboardMarkup(inline_keyboard=buttons)
+
 # --- День 1 ---
 def day1_mode_kb() -> types.InlineKeyboardMarkup:
     return types.InlineKeyboardMarkup(inline_keyboard=[
