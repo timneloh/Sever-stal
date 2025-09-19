@@ -6,6 +6,7 @@ import texts
 import keyboards
 from states import Day3States
 from utils import safe_delete_message
+import logging
 
 
 router = Router()
@@ -88,27 +89,54 @@ async def show_comics_result(message: types.Message, state: FSMContext):
     data = await state.get_data()
     hero = data.get("hero")
     scores = data.get("scores")
+    uid = message.chat.id
 
-    # Определяем доминирующую черту
-    if scores['сила'] > scores['мягкость'] and scores['сила'] > scores['харизма']:
-        dominant_trait = 'сила'
-    elif scores['харизма'] > scores['сила'] and scores['харизма'] > scores['мягкость']:
-        dominant_trait = 'харизма'
-    elif scores['мягкость'] > scores['сила'] and scores['мягкость'] > scores['харизма']:
-        dominant_trait = 'мягкость'
+    # Улучшенная логика определения доминирующей черты с обработкой ничьей
+    if not scores or not any(s > 0 for s in scores.values()):
+        dominant_trait = 'default'
     else:
-        dominant_trait = 'default' # Ничья или хаотичный выбор
+        max_score = max(scores.values())
+        top_traits = [trait for trait, score in scores.items() if score == max_score]
+
+        if len(top_traits) == 1:
+            dominant_trait = top_traits[0]
+        else: # len(top_traits) > 1, т.е. ничья
+            priority = ['сила', 'харизма', 'мягкость']
+            # Ищем первую черту из приоритетного списка, которая есть в списке лидеров
+            for trait in priority:
+                if trait in top_traits:
+                    dominant_trait = trait
+                    break
+            else:
+                # Этот блок выполнится, если ни одна из черт в priority не найдена в top_traits,
+                # что маловероятно, но является хорошей защитой.
+                dominant_trait = 'default'
 
     # Получаем текст концовки
     ending_text = texts.DAY3_COMICS[hero][-1]['endings'][dominant_trait]
+    image_path = f"img/comics/{hero}_ending_{dominant_trait}.png"
 
-    await message.answer(ending_text, reply_markup=keyboards.day3_after_comics_kb())
-    
-    uid = message.chat.id
-    if not await db.has_completed_day(uid, 3):
-        await db.update_points(uid, 5) # Баллы за прохождение комикса
-        # День будет считаться пройденным после викторины
+    try:
+        await message.answer_photo(
+            photo=types.FSInputFile(image_path),
+            caption=ending_text,
+            reply_markup=keyboards.day3_after_comics_kb()
+        )
+    except Exception as e:
+        logging.warning(f"Не удалось отправить фото {image_path}: {e}. Отправляю текстом.")
+        await message.answer(ending_text, reply_markup=keyboards.day3_after_comics_kb())
+
+    # Новая логика начисления баллов
+    day3_progress = await db.get_day_progress(uid, 3)
+    completed_heroes = day3_progress.get("completed_heroes", [])
+
+    if hero not in completed_heroes:
+        await db.update_points(uid, 5)  # Баллы за прохождение комикса
         await message.answer("🎉 Вам начислено <b>+5 баллов</b> за прохождение истории!")
+        
+        # Обновляем прогресс в БД
+        completed_heroes.append(hero)
+        await db.update_day_progress_data(uid, 3, {"completed_heroes": completed_heroes})
 
 @router.callback_query(Day3States.COMICS_PROGRESS, F.data.startswith("day3:comics_choice:"))
 async def handle_comics_choice(callback: types.CallbackQuery, state: FSMContext):
@@ -128,6 +156,12 @@ async def handle_comics_choice(callback: types.CallbackQuery, state: FSMContext)
     await state.update_data(scores=scores, frame=frame_idx + 1)
     await safe_delete_message(callback.message)
     await ask_comics_question(callback.message, state)
+    await callback.answer()
+
+@router.callback_query(F.data == "day3:choose_another_hero")
+async def choose_another_hero_handler(callback: types.CallbackQuery, state: FSMContext):
+    await safe_delete_message(callback.message)
+    await start_day3(callback.message, state)
     await callback.answer()
 
 @router.callback_query(F.data == "day3:start_quiz")
