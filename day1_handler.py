@@ -5,7 +5,7 @@ from aiogram.fsm.context import FSMContext
 import db
 import texts
 import keyboards
-from states import TestStates, SERIOUS_INTRO
+from states import TestStates
 from utils import safe_delete_message # Импортируем из общего хендлера
 
 router = Router()
@@ -92,7 +92,7 @@ async def start_day1_serious(callback: types.CallbackQuery, state: FSMContext):
     await safe_delete_message(callback.message)
     await state.set_state(TestStates.SERIOUS_TEST)
     await state.update_data(disc_q=0, disc_scores={"D": 0, "i": 0, "S": 0, "C": 0})
-    await callback.message.answer(SERIOUS_INTRO)
+    await callback.message.answer(texts.SERIOUS_INTRO)
     await ask_next_disc_question(callback.message, state)
     await callback.answer()
 

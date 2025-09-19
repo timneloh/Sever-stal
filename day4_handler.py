@@ -5,9 +5,10 @@ import random
 
 import db
 import texts
+import keyboards
 from states import Day4States
 from utils import safe_delete_message
-from config import PODCAST_URL
+
 
 router = Router()
 
@@ -55,9 +56,7 @@ async def send_day4_video(message: types.Message, state: FSMContext):
         )
         await message.answer(
             "День 4 пройден! Вы можете проверить свои баллы в профиле.",
-            reply_markup=types.InlineKeyboardMarkup(inline_keyboard=[
-                [types.InlineKeyboardButton(text="🎧 Послушать подкаст (5 мин)", url=PODCAST_URL)]
-            ])
+            reply_markup=keyboards.day4_after_quiz_kb()
         )
         await state.clear()
         return

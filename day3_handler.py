@@ -6,7 +6,7 @@ import texts
 import keyboards
 from states import Day3States
 from utils import safe_delete_message
-from config import PODCAST_URL
+
 
 router = Router()
 
@@ -155,9 +155,7 @@ async def ask_quiz_question(message: types.Message, state: FSMContext):
 async def show_quiz_result(message: types.Message, state: FSMContext):
     # Тут логика определения архетипа по баллам викторины
     archetype = "Лидер-стратег" # Заглушка
-    await message.answer(f"Викторина пройдена!\nВаш архетип: <b>{archetype}</b>", reply_markup=types.InlineKeyboardMarkup(inline_keyboard=[
-        [types.InlineKeyboardButton(text="🎧 Послушать подкаст (5 мин)", url=PODCAST_URL)]
-    ]))
+    await message.answer(f"Викторина пройдена!\nВаш архетип: <b>{archetype}</b>", reply_markup=keyboards.back_to_menu_inline())
 
     uid = message.chat.id
     if not await db.has_completed_day(uid, 3):

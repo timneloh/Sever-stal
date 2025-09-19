@@ -1,5 +1,6 @@
 from aiogram import types
-from config import PODCAST_URL, EVENT_DAYS
+from config import EVENT_DAYS
+import texts
 
 def main_menu_kb() -> types.ReplyKeyboardMarkup:
     buttons = [
@@ -61,14 +62,14 @@ def disc_result_kb(share_text: str) -> types.InlineKeyboardMarkup:
     return types.InlineKeyboardMarkup(inline_keyboard=[
         [types.InlineKeyboardButton(text="🔗 Поделиться", switch_inline_query=share_text)],
         [types.InlineKeyboardButton(text="🔄 Пройти другой тест", callback_data="day1:choose_again")],
-        [types.InlineKeyboardButton(text="🎧 Послушать подкаст (5 мин)", url=PODCAST_URL)],
+        [types.InlineKeyboardButton(text=f"🎧 {texts.PODCAST_TITLE} 1 дня (5 мин.)", callback_data="podcast:1")],
     ])
 
 def fun_result_kb(share_text: str) -> types.InlineKeyboardMarkup:
     return types.InlineKeyboardMarkup(inline_keyboard=[
         [types.InlineKeyboardButton(text="🔗 Поделиться", switch_inline_query=share_text)],
         [types.InlineKeyboardButton(text="🔄 Пройти другой тест", callback_data="day1:choose_again")],
-        [types.InlineKeyboardButton(text="🎧 Послушать подкаст (5 мин)", url=PODCAST_URL)],
+        [types.InlineKeyboardButton(text=f"🎧 {texts.PODCAST_TITLE} 1 дня (5 мин.)", callback_data="podcast:1")],
     ])
 
 # --- День 2 ---
@@ -78,7 +79,7 @@ def day2_cards_kb(opened_cards: list[int]) -> types.InlineKeyboardMarkup:
         text = f"✅ Карточка {i+1} (открыто)" if i in opened_cards else f"🎴 Карточка {i+1}"
         cb_data = "day2:opened" if i in opened_cards else f"day2:card:{i}"
         buttons.append([types.InlineKeyboardButton(text=text, callback_data=cb_data)])
-    buttons.append([types.InlineKeyboardButton(text="🎧 Послушать подкаст (5 мин)", url=PODCAST_URL)])
+    buttons.append([types.InlineKeyboardButton(text=f"🎧 {texts.PODCAST_TITLE} 2 дня (5 мин.)", callback_data="podcast:2")])
     return types.InlineKeyboardMarkup(inline_keyboard=buttons)
 
 def day2_after_card_kb() -> types.InlineKeyboardMarkup:
@@ -110,7 +111,7 @@ def day3_after_comics_kb() -> types.InlineKeyboardMarkup:
     return types.InlineKeyboardMarkup(inline_keyboard=[
         [types.InlineKeyboardButton(text="Пройти викторину", callback_data="day3:start_quiz")],
         [types.InlineKeyboardButton(text="Выбрать другого героя", callback_data="day3:choose_another_hero")],
-        [types.InlineKeyboardButton(text="🎧 Послушать подкаст (5 мин)", url=PODCAST_URL)],
+        [types.InlineKeyboardButton(text=f"🎧 {texts.PODCAST_TITLE} 3 дня (5 мин.)", callback_data="podcast:3")],
     ])
 
 def day3_quiz_kb(options: list) -> types.InlineKeyboardMarkup:
@@ -119,9 +120,14 @@ def day3_quiz_kb(options: list) -> types.InlineKeyboardMarkup:
 
 
 # --- День 4 ---
-def day4_quiz_kb(options: list) -> types.InlineKeyboardMarkup:
-    buttons = [[types.InlineKeyboardButton(text=option, callback_data=f"day4:answer:{i}")] for i, option in enumerate(options)]
+def day4_quiz_kb(options: list, case_idx: int) -> types.InlineKeyboardMarkup:
+    buttons = [[types.InlineKeyboardButton(text=option, callback_data=f"day4:answer:{case_idx}:{i}")] for i, option in enumerate(options)]
     return types.InlineKeyboardMarkup(inline_keyboard=buttons)
+
+def day4_after_quiz_kb() -> types.InlineKeyboardMarkup:
+    return types.InlineKeyboardMarkup(inline_keyboard=[
+        [types.InlineKeyboardButton(text=f"🎧 {texts.PODCAST_TITLE} 4 дня (5 мин.)", callback_data="podcast:4")]
+    ])
 
 # --- День 5 ---
 def day5_quiz_kb(options: list) -> types.InlineKeyboardMarkup:
@@ -131,7 +137,7 @@ def day5_quiz_kb(options: list) -> types.InlineKeyboardMarkup:
 def day5_after_quiz_kb() -> types.InlineKeyboardMarkup:
     return types.InlineKeyboardMarkup(inline_keyboard=[
         [types.InlineKeyboardButton(text="Пройти рефлексию", callback_data="day5:start_reflection")],
-        [types.InlineKeyboardButton(text="🎧 Послушать подкаст (5 мин)", url=PODCAST_URL)]
+        [types.InlineKeyboardButton(text=f"🎧 {texts.PODCAST_TITLE} 5 дня (5 мин.)", callback_data="podcast:5")]
     ])
 
 def day5_next_question_kb() -> types.InlineKeyboardMarkup:
