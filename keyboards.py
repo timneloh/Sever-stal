@@ -127,6 +127,11 @@ def day3_quiz_kb(options: list) -> types.InlineKeyboardMarkup:
     buttons = [[types.InlineKeyboardButton(text=option, callback_data=f"day3:quiz_answer:{i}")] for i, option in enumerate(options)]
     return types.InlineKeyboardMarkup(inline_keyboard=buttons)
 
+def day3_quiz_next_kb() -> types.InlineKeyboardMarkup:
+    return types.InlineKeyboardMarkup(inline_keyboard=[
+        [types.InlineKeyboardButton(text="Далее ➡️", callback_data="day3:quiz_next")]
+    ])
+
 
 # --- День 4 ---
 def day4_quiz_kb(options: list, case_idx: int) -> types.InlineKeyboardMarkup:

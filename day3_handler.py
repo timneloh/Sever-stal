@@ -167,6 +167,8 @@ async def choose_another_hero_handler(callback: types.CallbackQuery, state: FSMC
 @router.callback_query(F.data == "day3:start_quiz")
 async def start_quiz(callback: types.CallbackQuery, state: FSMContext):
     await state.set_state(Day3States.QUIZ)
+    # quiz_q - номер текущего вопроса (индекс)
+    # quiz_score - количество правильных ответов
     await state.update_data(quiz_q=0, quiz_score=0)
     await safe_delete_message(callback.message)
     await ask_quiz_question(callback.message, state)
@@ -182,25 +184,70 @@ async def ask_quiz_question(message: types.Message, state: FSMContext):
         
     q_data = texts.DAY3_QUIZ["questions"][q_idx]
     await message.answer(
-        f"<b>Вопрос {q_idx+1}:</b>\n{q_data['text']}",
+        f"<b>Вопрос {q_idx+1}/{len(texts.DAY3_QUIZ['questions'])}:</b>\n{q_data['text']}",
         reply_markup=keyboards.day3_quiz_kb(q_data['options'])
     )
     
 async def show_quiz_result(message: types.Message, state: FSMContext):
-    # Тут логика определения архетипа по баллам викторины
-    archetype = "Лидер-стратег" # Заглушка
-    await message.answer(f"Викторина пройдена!\nВаш архетип: <b>{archetype}</b>", reply_markup=keyboards.back_to_menu_inline())
-
+    data = await state.get_data()
+    score = data.get("quiz_score", 0)
     uid = message.chat.id
+
+    # Определяем архетип по баллам
+    # Результат по умолчанию для 0-2 баллов
+    result_data = texts.DAY3_ARCHETYPES[-1]
+    for res in texts.DAY3_ARCHETYPES:
+        if score >= res["score"]:
+            result_data = res
+            break
+    
+    archetype = result_data["archetype"]
+    recommendation = result_data["recommendation"]
+
+    await message.answer(
+        f"🎉 <b>Викторина пройдена!</b>\n\n"
+        f"Ваш результат: <b>{score} из {len(texts.DAY3_QUIZ['questions'])}</b> правильных ответов.\n\n"
+        f"Ваш архетип: <b>{archetype}</b>\n\n"
+        f"<i>{recommendation}</i>",
+        reply_markup=keyboards.back_to_menu_inline()
+    )
+
     if not await db.has_completed_day(uid, 3):
         await db.mark_day_completed(uid, 3)
-        await db.add_result(uid, archetype)
-        await message.answer("День 3 пройден!")
+        await db.add_result(uid, f"Архетип дня 3: {archetype}")
+        await message.answer("Поздравляем, вы завершили День 3!")
         
 @router.callback_query(Day3States.QUIZ, F.data.startswith("day3:quiz_answer:"))
 async def handle_quiz_answer(callback: types.CallbackQuery, state: FSMContext):
-    # (Здесь должна быть логика проверки ответа, начисления баллов)
-    await state.update_data(quiz_q=(await state.get_data()).get("quiz_q", 0) + 1)
+    user_answer_idx = int(callback.data.split(":")[-1])
+    data = await state.get_data()
+    q_idx = data.get("quiz_q", 0)
+    
+    q_data = texts.DAY3_QUIZ["questions"][q_idx]
+    correct_answers = q_data["correct_answers"]
+    
+    # Обновляем счет, если ответ правильный
+    if user_answer_idx in correct_answers:
+        new_score = data.get("quiz_score", 0) + 1
+        await state.update_data(quiz_score=new_score)
+        feedback = "✅ Правильно!"
+    else:
+        feedback = "❌ Неверно."
+
+    # Показываем комментарий и кнопку "Далее"
+    comment = q_data["comment"]
+    await callback.message.edit_text(
+        f"<b>Вопрос {q_idx+1}/{len(texts.DAY3_QUIZ['questions'])}:</b>\n{q_data['text']}\n\n"
+        f"<b>{feedback}</b>\n<i>{comment}</i>",
+        reply_markup=keyboards.day3_quiz_next_kb()
+    )
+    await callback.answer()
+
+@router.callback_query(Day3States.QUIZ, F.data == "day3:quiz_next")
+async def quiz_next_question(callback: types.CallbackQuery, state: FSMContext):
+    # Увеличиваем номер вопроса и задаем следующий
+    q_idx = (await state.get_data()).get("quiz_q", 0)
+    await state.update_data(quiz_q=q_idx + 1)
     await safe_delete_message(callback.message)
     await ask_quiz_question(callback.message, state)
     await callback.answer()
