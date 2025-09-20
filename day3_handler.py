@@ -169,6 +169,14 @@ async def choose_another_hero_handler(callback: types.CallbackQuery, state: FSMC
 
 @router.callback_query(F.data == "day3:start_quiz")
 async def start_quiz(callback: types.CallbackQuery, state: FSMContext):
+    uid = callback.from_user.id
+    day3_progress = await db.get_day_progress(uid, 3)
+    completed_heroes = day3_progress.get("completed_heroes", [])
+
+    if len(completed_heroes) < 3:
+        await callback.answer("Вам нужно пройти все комиксы, чтобы пройти викторину.", show_alert=True)
+        return
+
     await state.set_state(Day3States.QUIZ)
     # quiz_q - номер текущего вопроса (индекс)
     # quiz_score - количество правильных ответов
