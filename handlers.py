@@ -126,7 +126,7 @@ async def send_podcast(callback: types.CallbackQuery):
     try:
         await callback.message.answer_audio(
             audio=types.FSInputFile(audio_path),
-            caption=f"Подкаст дня {day}"
+            caption=f"Подкаст день {day}"
         )
         await callback.answer()
     except Exception as e:

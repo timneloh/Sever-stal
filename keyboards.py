@@ -62,14 +62,14 @@ def disc_result_kb(share_text: str) -> types.InlineKeyboardMarkup:
     return types.InlineKeyboardMarkup(inline_keyboard=[
         [types.InlineKeyboardButton(text="🔗 Поделиться", switch_inline_query=share_text)],
         [types.InlineKeyboardButton(text="🔄 Пройти другой тест", callback_data="day1:choose_again")],
-        [types.InlineKeyboardButton(text=f"🎧 {texts.PODCAST_TITLE} 1 дня (5 мин.)", callback_data="podcast:1")],
+        [types.InlineKeyboardButton(text=f"🎧 {texts.PODCAST_TITLE} первого дня (5 мин.)", callback_data="podcast:1")],
     ])
 
 def fun_result_kb(share_text: str) -> types.InlineKeyboardMarkup:
     return types.InlineKeyboardMarkup(inline_keyboard=[
         [types.InlineKeyboardButton(text="🔗 Поделиться", switch_inline_query=share_text)],
         [types.InlineKeyboardButton(text="🔄 Пройти другой тест", callback_data="day1:choose_again")],
-        [types.InlineKeyboardButton(text=f"🎧 {texts.PODCAST_TITLE} 1 дня (5 мин.)", callback_data="podcast:1")],
+        [types.InlineKeyboardButton(text=f"🎧 {texts.PODCAST_TITLE} первого дня (5 мин.)", callback_data="podcast:1")],
     ])
 
 # --- День 2 ---
@@ -80,7 +80,7 @@ def day2_cards_kb(opened_cards: list[int]) -> types.InlineKeyboardMarkup:
         cb_data = "day2:opened" if i in opened_cards else f"day2:card:{i}"
         buttons.append([types.InlineKeyboardButton(text=text, callback_data=cb_data)])
     buttons.append([types.InlineKeyboardButton(text="Пройти опрос на эмпатию (30 мин.)", callback_data="day2:empathy_test")])
-    buttons.append([types.InlineKeyboardButton(text=f"🎧 {texts.PODCAST_TITLE} 2 дня (5 мин.)", callback_data="podcast:2")])
+    buttons.append([types.InlineKeyboardButton(text=f"🎧 {texts.PODCAST_TITLE} второго дня (5 мин.)", callback_data="podcast:2")])
     return types.InlineKeyboardMarkup(inline_keyboard=buttons)
 
 def day2_after_card_kb() -> types.InlineKeyboardMarkup:
@@ -149,7 +149,7 @@ def day4_quiz_kb(options: list, case_idx: int) -> types.InlineKeyboardMarkup:
 
 def day4_after_quiz_kb() -> types.InlineKeyboardMarkup:
     return types.InlineKeyboardMarkup(inline_keyboard=[
-        [types.InlineKeyboardButton(text=f"🎧 {texts.PODCAST_TITLE} 4 дня (5 мин.)", callback_data="podcast:4")]
+        [types.InlineKeyboardButton(text=f"🎧 {texts.PODCAST_TITLE} четвёртого дня (5 мин.)", callback_data="podcast:4")]
     ])
 
 # --- День 5 ---
@@ -160,7 +160,7 @@ def day5_quiz_kb(options: list) -> types.InlineKeyboardMarkup:
 def day5_after_quiz_kb() -> types.InlineKeyboardMarkup:
     return types.InlineKeyboardMarkup(inline_keyboard=[
         [types.InlineKeyboardButton(text="Пройти рефлексию", callback_data="day5:start_reflection")],
-        [types.InlineKeyboardButton(text=f"🎧 {texts.PODCAST_TITLE} 5 дня (5 мин.)", callback_data="podcast:5")]
+        [types.InlineKeyboardButton(text=f"🎧 {texts.PODCAST_TITLE} пятого дня (5 мин.)", callback_data="podcast:5")]
     ])
 
 def day5_next_question_kb() -> types.InlineKeyboardMarkup:
