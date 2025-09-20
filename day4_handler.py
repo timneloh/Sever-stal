@@ -24,7 +24,7 @@ def watched_video_kb(case_idx: int):
 def day4_quiz_kb(options: list, case_idx: int):
     """Создает клавиатуру с вариантами ответа для викторины 4-го дня."""
     buttons = [
-        [InlineKeyboardButton(text=option, callback_data=f"day4:answer:{case_idx}:{i}")]
+        [InlineKeyboardButton(text=str(i + 1), callback_data=f"day4:answer:{case_idx}:{i}")]
         for i, option in enumerate(options)
     ]
     return InlineKeyboardMarkup(inline_keyboard=buttons)
@@ -94,7 +94,8 @@ async def ask_day4_question(message: types.Message, state: FSMContext):
     case_idx = data.get("case_idx", 0)
     case = texts.DAY4_CASES[case_idx]
 
-    question_text = "Что было не так в этой переписке?"
+    options_text = "\n".join([f"{i+1}. {option}" for i, option in enumerate(case['options'])])
+    question_text = f"Что было не так в этой переписке?\n\n{options_text}"
     image_path = f"img/Аудио-викторина-{case_idx + 1}.png"
     
     sent_message = await message.answer_photo(
@@ -140,8 +141,7 @@ async def handle_day4_answer(callback: types.CallbackQuery, state: FSMContext):
         answered_cases.append(case_idx)
         await db.update_day_progress_data(callback.from_user.id, 4, {"answered_cases": answered_cases})
     else:
-        correct_answer_text = case['options'][case['correct']]
-        feedback_message = await callback.message.answer(f"❌ Этот ответ не правильный, правильный ответ: «{correct_answer_text}»\n\n<i>{case['comment']}</i>")
+        feedback_message = await callback.message.answer(f"❌ Этот ответ не правильный.\n\n<i>{case['comment']}</i>")
     
     # ⭐ ИЗМЕНЕНИЕ ЗДЕСЬ: Сохраняем сообщение с фидбэком в состояние, чтобы удалить его на следующем шаге
     if feedback_message:

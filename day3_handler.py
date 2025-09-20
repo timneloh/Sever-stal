@@ -79,9 +79,12 @@ async def ask_comics_question(message: types.Message, state: FSMContext):
 
     frame_data = comics_frames[frame_idx]
     
+    options_text = "\n".join([f"{i+1}. {choice[0]}" for i, choice in enumerate(frame_data['choices'])])
+    caption = f"{frame_data['text']}\n\n{options_text}\n\n<i>Кадр {frame_idx+1}/{len(comics_frames)}</i>"
+
     await message.answer_photo(
         photo=types.FSInputFile(frame_data['img']),
-        caption=f"{frame_data['text']}\n\n<i>Кадр {frame_idx+1}/{len(comics_frames)}</i>",
+        caption=caption,
         reply_markup=keyboards.day3_comics_choice_kb(frame_data['choices'])
     )
 
@@ -183,8 +186,10 @@ async def ask_quiz_question(message: types.Message, state: FSMContext):
         return
         
     q_data = texts.DAY3_QUIZ["questions"][q_idx]
+    options_text = "\n".join([f"{i+1}. {option}" for i, option in enumerate(q_data['options'])])
+    text = f"<b>Вопрос {q_idx+1}/{len(texts.DAY3_QUIZ['questions'])}:</b>\n{q_data['text']}\n\n{options_text}"
     await message.answer(
-        f"<b>Вопрос {q_idx+1}/{len(texts.DAY3_QUIZ['questions'])}:</b>\n{q_data['text']}",
+        text,
         reply_markup=keyboards.day3_quiz_kb(q_data['options'])
     )
     
@@ -235,9 +240,11 @@ async def handle_quiz_answer(callback: types.CallbackQuery, state: FSMContext):
 
     # Показываем комментарий и кнопку "Далее"
     comment = q_data["comment"]
+    options_text = "\n".join([f"{i+1}. {option}" for i, option in enumerate(q_data['options'])])
+    text = f"<b>Вопрос {q_idx+1}/{len(texts.DAY3_QUIZ['questions'])}:</b>\n{q_data['text']}\n\n{options_text}"
+    
     await callback.message.edit_text(
-        f"<b>Вопрос {q_idx+1}/{len(texts.DAY3_QUIZ['questions'])}:</b>\n{q_data['text']}\n\n"
-        f"<b>{feedback}</b>\n<i>{comment}</i>",
+        f"{text}\n\n<b>{feedback}</b>\n<i>{comment}</i>",
         reply_markup=keyboards.day3_quiz_next_kb()
     )
     await callback.answer()

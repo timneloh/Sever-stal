@@ -47,15 +47,15 @@ def slider_kb() -> types.InlineKeyboardMarkup:
     ])
 
 def mc_kb(q: dict) -> types.InlineKeyboardMarkup:
-    buttons = [[types.InlineKeyboardButton(text=opt[0], callback_data=f"mc:{i}")] for i, opt in enumerate(q["options"])]
+    buttons = [[types.InlineKeyboardButton(text=str(i+1), callback_data=f"mc:{i}")] for i, opt in enumerate(q["options"])]
     return types.InlineKeyboardMarkup(inline_keyboard=buttons)
 
 def assoc_kb(q: dict) -> types.InlineKeyboardMarkup:
-    buttons = [[types.InlineKeyboardButton(text=icon, callback_data=f"assoc:{i}")] for i, icon in enumerate(q["icons"])]
+    buttons = [[types.InlineKeyboardButton(text=str(i+1), callback_data=f"assoc:{i}")] for i, icon in enumerate(q["icons"])]
     return types.InlineKeyboardMarkup(inline_keyboard=buttons)
 
 def fun_test_kb(q: dict) -> types.InlineKeyboardMarkup:
-    buttons = [[types.InlineKeyboardButton(text=opt[0], callback_data=f"fun:{i}")] for i, opt in enumerate(q["options"])]
+    buttons = [[types.InlineKeyboardButton(text=str(i+1), callback_data=f"fun:{i}")] for i, opt in enumerate(q["options"])]
     return types.InlineKeyboardMarkup(inline_keyboard=buttons)
 
 def disc_result_kb(share_text: str) -> types.InlineKeyboardMarkup:
@@ -113,7 +113,7 @@ def day3_hero_select_kb(heroes_keys: list, current_idx: int) -> types.InlineKeyb
     return types.InlineKeyboardMarkup(inline_keyboard=buttons)
 
 def day3_comics_choice_kb(choices: list) -> types.InlineKeyboardMarkup:
-    buttons = [[types.InlineKeyboardButton(text=choice[0], callback_data=f"day3:comics_choice:{i}")] for i, choice in enumerate(choices)]
+    buttons = [[types.InlineKeyboardButton(text=str(i+1), callback_data=f"day3:comics_choice:{i}")] for i, choice in enumerate(choices)]
     return types.InlineKeyboardMarkup(inline_keyboard=buttons)
 
 def day3_after_comics_kb() -> types.InlineKeyboardMarkup:
@@ -124,7 +124,7 @@ def day3_after_comics_kb() -> types.InlineKeyboardMarkup:
     ])
 
 def day3_quiz_kb(options: list) -> types.InlineKeyboardMarkup:
-    buttons = [[types.InlineKeyboardButton(text=option, callback_data=f"day3:quiz_answer:{i}")] for i, option in enumerate(options)]
+    buttons = [[types.InlineKeyboardButton(text=str(i+1), callback_data=f"day3:quiz_answer:{i}")] for i, option in enumerate(options)]
     return types.InlineKeyboardMarkup(inline_keyboard=buttons)
 
 def day3_quiz_next_kb() -> types.InlineKeyboardMarkup:
@@ -135,7 +135,7 @@ def day3_quiz_next_kb() -> types.InlineKeyboardMarkup:
 
 # --- День 4 ---
 def day4_quiz_kb(options: list, case_idx: int) -> types.InlineKeyboardMarkup:
-    buttons = [[types.InlineKeyboardButton(text=option, callback_data=f"day4:answer:{case_idx}:{i}")] for i, option in enumerate(options)]
+    buttons = [[types.InlineKeyboardButton(text=str(i+1), callback_data=f"day4:answer:{case_idx}:{i}")] for i, option in enumerate(options)]
     return types.InlineKeyboardMarkup(inline_keyboard=buttons)
 
 def day4_after_quiz_kb() -> types.InlineKeyboardMarkup:
@@ -145,7 +145,7 @@ def day4_after_quiz_kb() -> types.InlineKeyboardMarkup:
 
 # --- День 5 ---
 def day5_quiz_kb(options: list) -> types.InlineKeyboardMarkup:
-    buttons = [[types.InlineKeyboardButton(text=option, callback_data=f"day5:answer:{i}")] for i, option in enumerate(options)]
+    buttons = [[types.InlineKeyboardButton(text=str(i+1), callback_data=f"day5:answer:{i}")] for i, option in enumerate(options)]
     return types.InlineKeyboardMarkup(inline_keyboard=buttons)
     
 def day5_after_quiz_kb() -> types.InlineKeyboardMarkup:

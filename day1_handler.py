@@ -114,6 +114,13 @@ async def ask_next_disc_question(message: types.Message, state: FSMContext):
     
     if qtype == "slider":
         text += f"\n\n<i>«{q['left']}» ↔ «{q['right']}»</i>"
+    elif qtype == "mc":
+        options_text = "\n".join([f"{i+1}. {opt[0]}" for i, opt in enumerate(q["options"])])
+        text += f"\n\n{options_text}"
+    elif qtype == "assoc":
+        options_text = "\n".join([f"{i+1}. {icon}" for i, icon in enumerate(q["icons"])])
+        text += f"\n\n{options_text}"
+
 
     kb = None
     if qtype == "slider": kb = keyboards.slider_kb()
@@ -233,7 +240,8 @@ async def ask_next_fun_question(message: types.Message, state: FSMContext):
         return
 
     q = texts.FUN_QUESTIONS[qidx]
-    text = f"Вопрос {qidx + 1}/{len(texts.FUN_QUESTIONS)}\n<b>{q['text']}</b>"
+    options_text = "\n".join([f"{i+1}. {opt[0]}" for i, opt in enumerate(q["options"])])
+    text = f"Вопрос {qidx + 1}/{len(texts.FUN_QUESTIONS)}\n<b>{q['text']}</b>\n\n{options_text}"
     await message.answer(text, reply_markup=keyboards.fun_test_kb(q))
 
 @router.callback_query(TestStates.FUN_TEST, F.data.startswith("fun:"))
