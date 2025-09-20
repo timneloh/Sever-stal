@@ -120,8 +120,17 @@ def day3_after_comics_kb() -> types.InlineKeyboardMarkup:
     return types.InlineKeyboardMarkup(inline_keyboard=[
         [types.InlineKeyboardButton(text="Пройти викторину", callback_data="day3:start_quiz")],
         [types.InlineKeyboardButton(text="Выбрать другого героя", callback_data="day3:choose_another_hero")],
-        [types.InlineKeyboardButton(text=f"🎧 {texts.PODCAST_TITLE} 3 дня (5 мин.)", callback_data="podcast:3")],
+        [types.InlineKeyboardButton(text="🎧 Подкасты", callback_data="day3:show_podcasts")],
     ])
+
+def day3_podcasts_kb() -> types.InlineKeyboardMarkup:
+    buttons = [
+        [types.InlineKeyboardButton(text="Уинстон Черчилль - «Сила речи»", callback_data="day3:play_podcast:churchill")],
+        [types.InlineKeyboardButton(text="Коко Шанель — «Харизма и свобода»", callback_data="day3:play_podcast:chanel")],
+        [types.InlineKeyboardButton(text="Франклин Рузвельт — «Дипломатия и доверие»", callback_data="day3:play_podcast:roosevelt")],
+        [types.InlineKeyboardButton(text="Вернуться к выбору героя", callback_data="day3:choose_another_hero")],
+    ]
+    return types.InlineKeyboardMarkup(inline_keyboard=buttons)
 
 def day3_quiz_kb(options: list) -> types.InlineKeyboardMarkup:
     buttons = [[types.InlineKeyboardButton(text=str(i+1), callback_data=f"day3:quiz_answer:{i}")] for i, option in enumerate(options)]

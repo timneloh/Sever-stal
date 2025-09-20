@@ -265,3 +265,36 @@ async def quiz_next_question(callback: types.CallbackQuery, state: FSMContext):
     await safe_delete_message(callback.message)
     await ask_quiz_question(callback.message, state)
     await callback.answer()
+
+@router.callback_query(F.data == "day3:show_podcasts")
+async def show_podcasts_menu(callback: types.CallbackQuery):
+    await safe_delete_message(callback.message)
+    await callback.message.answer(
+        "Выберите подкаст для прослушивания.",
+        reply_markup=keyboards.day3_podcasts_kb()
+    )
+    await callback.answer()
+
+@router.callback_query(F.data.startswith("day3:play_podcast:"))
+async def play_day3_podcast(callback: types.CallbackQuery):
+    hero_map = {
+        "churchill": {"file": "curchill.mp3", "caption": "Подкаст: Уинстон Черчилль - \"Сила речи\""},
+        "chanel": {"file": "coco.mp3", "caption": "Подкаст: Коко Шанель — \"Харизма и свобода\""},
+        "roosevelt": {"file": "roosevelt.mp3", "caption": "Подкаст: Франклин Рузвельт — \"Дипломатия и доверие\""}
+    }
+    
+    hero_key = callback.data.split(":")[-1]
+    podcast_info = hero_map.get(hero_key)
+
+    if podcast_info:
+        audio_path = f"audio/{podcast_info['file']}"
+        try:
+            await callback.message.answer_audio(
+                audio=types.FSInputFile(audio_path),
+                caption=podcast_info['caption']
+            )
+        except Exception as e:
+            logging.error(f"Failed to send audio {audio_path}: {e}")
+            await callback.message.answer("Не удалось загрузить аудиофайл. Попробуйте позже.")
+    
+    await callback.answer()
